@@ -1,0 +1,10 @@
+FROM microsoft/aspnetcore-build:2.0.2
+WORKDIR /app
+
+COPY Com.Danliris.Service.Inventory.Lib/*.csproj ./Com.Danliris.Service.Inventory.Lib/
+COPY Com.Danliris.Service.Inventory.WebApi/*.csproj ./Com.Danliris.Service.Inventory.WebApi/
+RUN dotnet restore ./Com.Danliris.Service.Inventory.WebApi/
+
+COPY Com.Danliris.Service.Inventory.Lib/. ./Com.Danliris.Service.Inventory.Lib/
+COPY Com.Danliris.Service.Inventory.WebApi/. ./Com.Danliris.Service.Inventory.WebApi/
+RUN dotnet publish ./Com.Danliris.Service.Inventory.WebApi/ --output /out/ --configuration Release

@@ -18,5 +18,6 @@ namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocService
         Task<int> Void(int id, string user, int clientTimeZoneOffset = 7);
         SalesDoc ReadModelByCode(string code, string storecode);
         Tuple<List<SalesDoc>, int, Dictionary<string, string>, List<string>> ReadModelReturn(string storecode, int Page = 1, int Size = 25, string Order = "{}", string Keyword = null, string Filter = "{}", string Username = "");
+        Tuple<List<PaymentMethodReportViewModel>, int> GetPaymentMethodReport(string storecode, DateTimeOffset dateFrom, DateTimeOffset dateTo, string shift, string info, int offset, string username, int page, int size, string Order = "{}");
     }
 }

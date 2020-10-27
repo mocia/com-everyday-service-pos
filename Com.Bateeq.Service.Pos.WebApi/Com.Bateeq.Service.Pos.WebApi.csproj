@@ -36,16 +36,7 @@
 
   <ItemGroup>
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="obj\Com.Bateeq.Service.Pos.WebApi.csproj.nuget.cache" />
-    <None Include="obj\Com.Bateeq.Service.Pos.WebApi.csproj.nuget.g.props" />
-    <None Include="obj\Com.Bateeq.Service.Pos.WebApi.csproj.nuget.g.targets" />
-    <None Include="obj\Debug\netcoreapp2.0\Com.Bateeq.Service.Pos.WebApi.AssemblyInfoInputs.cache" />
-    <None Include="obj\Debug\netcoreapp2.0\Com.Bateeq.Service.Pos.WebApi.assets.cache" />
-    <None Include="obj\Debug\netcoreapp2.0\Com.Bateeq.Service.Pos.WebApi.csproj.CoreCompileInputs.cache" />
-  </ItemGroup>
+  </ItemGroup>  
 
   <ItemGroup>
     <ProjectReference Include="..\Com.Bateeq.Service.Pos.Lib\Com.Bateeq.Service.Pos.Lib.csproj" />

@@ -13,16 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="obj\Debug\netcoreapp2.0\Com.Bateeq.Service.Pos.WebApi.AssemblyInfo.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="obj\Debug\netcoreapp2.0\Com.Bateeq.Service.Pos.WebApi.csproj.FileListAbsolute.txt" />
-    <Content Include="obj\project.assets.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="bin\Debug\netcoreapp2.0\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 

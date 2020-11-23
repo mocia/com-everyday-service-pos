@@ -1,4 +1,6 @@
-﻿using Com.Bateeq.Service.Pos.Lib.Models.SalesReturn;
+﻿using Com.Bateeq.Service.Pos.Lib.Models.SalesDoc;
+using Com.Bateeq.Service.Pos.Lib.Models.SalesReturn;
+using Com.Bateeq.Service.Pos.Lib.ViewModels.SalesDoc;
 using Com.Bateeq.Service.Pos.Lib.ViewModels.SalesDocReturn;
 using System;
 using System.Collections.Generic;
@@ -14,5 +16,7 @@ namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocReturnService
         SalesDocReturnViewModel MapToViewModel(SalesDocReturn model);
         Task<int> Create(SalesDocReturn model, SalesDocReturnViewModel viewModel);
         SalesDocReturn ReadModelById(int id);
+        List<SalesDoc> SalesReturnReport(string storecode, DateTimeOffset dateFrom, DateTimeOffset dateTo, string shift);
+        SalesDocViewModel MaptoViewModel(SalesDoc model);
     }
 }

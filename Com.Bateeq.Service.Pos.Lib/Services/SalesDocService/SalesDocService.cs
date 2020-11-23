@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using System.Data;
 using System.IO;
 using System.Globalization;
+using Com.Bateeq.Service.Pos.Lib.ViewModels;
 
 namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocService
 {
@@ -626,6 +627,58 @@ namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocService
 
         }
 
+        #region SalesVoidReport
+        public IQueryable<SalesVoidReportViewModel> GetSalesVoidReportQuery(string storeCode, DateTimeOffset dateFrom, DateTimeOffset dateTo, string shift)
+        {
+            var Query = (from a in DbContext.SalesDocs
+                         join b in DbContext.SalesDocDetails on a.Id equals b.SalesDocId
+                         where a._IsDeleted == false
+                         && b._IsDeleted == false
+                         && a.isVoid == true
+                         //&& c.StorageId == (string.IsNullOrWhiteSpace(storageId) ? c.StorageId : storageId)
+                         && a.Date.Date >= dateFrom.Date
+                         && a.Date.Date <= dateTo.Date
+                         && a.StoreCode == (string.IsNullOrWhiteSpace(storeCode) ? a.StoreCode : storeCode)
+                         && a.Shift == (string.IsNullOrWhiteSpace(shift) ? a.Shift : Convert.ToInt32(shift))
+                         //&& a.ItemName == (string.IsNullOrWhiteSpace(info) ? a.ItemName : info)
+
+                         select new SalesVoidReportViewModel
+                         {
+                             date = a.Date,
+                             code = a.Code,
+                             grandTotal = a.GrandTotal,
+                             storeId = a.StoreId,
+                             storeCode = a.StoreCode,
+                             storeName = a.StoreName,
+                             ItemId = b.ItemId,
+                             ItemCode = b.ItemCode,
+                             ItemName = b.ItemName,
+                             Quantity = b.Quantity,
+                             TotalPrice = b.Total,
+                             shift = a.Shift,
+                             reference = a.Reference,
+                             remark = a.Remark,
+                             isReturn = a.isReturn,
+                             isVoid = a.isVoid
+                         });
+            return Query;
+        }
+
+        public Tuple<List<SalesVoidReportViewModel>, int> GetSalesVoidReport(string storeCode, DateTimeOffset dateFrom, DateTimeOffset dateTo, string shift, int offset, int page = 1, int size = 25, string Order = "{}")
+        {
+            var Query = GetSalesVoidReportQuery(storeCode, dateFrom, dateTo, shift);
+
+            Dictionary<string, string> OrderDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Order);
+
+
+            // Pageable<InventoriesReportViewModel> pageable = new Pageable<InventoriesReportViewModel>(Query, page - 1, size);
+            List<SalesVoidReportViewModel> Data = Query.ToList<SalesVoidReportViewModel>();
+            // int TotalData = pageable.TotalCount;
+            return Tuple.Create(Data, Data.Count());
+
+        }
+        #endregion
+
         public StoreViewModels GetStore(string storeCode)
         {
             string storeUri = "master/stores/code";
@@ -830,10 +883,10 @@ namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocService
                               join c in SalesDocs on a.Code equals c.StoreCode into d
                               from c in d.DefaultIfEmpty()
                               where
-                               //c._IsDeleted == false
+                              // c._IsDeleted == false
                                //&& c.Date.Date >= dateFrom.Date
                                //&& c.Date.Date <= dateTo.Date
-                               a.SalesCategory == "STAND ALONE"
+                              a.SalesCategory == "STAND ALONE"
                                && a.OnlineOffline == "OFFLINE"
                               && a.Status == "OPEN"
                               select new

@@ -62,8 +62,6 @@ namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocReturnService
                 "Id", "Date", "Code", "StoreName"
             };
 
-
-
             Dictionary<string, object> FilterDictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(Filter);
             Query = QueryHelper<SalesDocReturn>.Filter(Query, FilterDictionary);
 
@@ -117,8 +115,6 @@ namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocReturnService
                 salesDocDetail.SpesialDiscount = i.specialDiscount;
                 salesDocDetail.Total = i.total;
 
-
-
                 model.Details.Add(salesDocDetail);
             }
 
@@ -164,7 +160,6 @@ namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocReturnService
                     salesDocDetailViewModel.quantity = i.Quantity;
                     salesDocDetailViewModel.specialDiscount = i.SpesialDiscount;
                     salesDocDetailViewModel.total = i.Total;
-
 
                     salesitems.Add(salesDocDetailViewModel);
             }
@@ -477,6 +472,118 @@ namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocReturnService
             return viewModel;
 
         }
+
+        public SalesDocViewModel MaptoViewModel(SalesDoc model)
+        {
+            SalesDocViewModel viewModel = new SalesDocViewModel();
+            PropertyCopier<SalesDoc, SalesDocViewModel>.Copy(model, viewModel);
+            var salesdoc = DbContext.Set<SalesDoc>().Where(x => x.Id == model.Id).FirstOrDefault();
+            viewModel.Active = model.Active;
+            viewModel.date = model.Date;
+            viewModel.discount = model.Discount;
+            viewModel.grandTotal = model.GrandTotal;
+            viewModel.Id = model.Id;
+            viewModel.reference = model.Reference;
+            viewModel.remark = model.Remark;
+            viewModel.code = model.Code;
+            viewModel.isReturn = model.isReturn;
+            viewModel.isVoid = model.isVoid;
+            viewModel.salesDetail = new SalesDetail
+            {
+                bank = new Bank
+                {
+                    code = model.BankCode,
+                    description = "",
+                    name = model.BankName,
+                    _id = model.BankId
+                },
+                bankCard = new Bank
+                {
+                    code = model.BankCardCode,
+                    description = "",
+                    name = model.BankCardName,
+                    _id = model.BankCardId
+                },
+                cardAmount = model.CardAmount,
+                cardName = model.CardName,
+                cardNumber = model.CardNumber,
+                cardType = new Card
+                {
+                    code = model.CardTypeCode,
+                    description = "",
+                    name = model.CardTypeName,
+                    _id = model.CardTypeId
+                },
+                cashAmount = model.CashAmount,
+                paymentType = model.PaymentType,
+                voucher = new Voucher
+                {
+                    value = model.VoucherValue
+                },
+                card = model.Card
+            };
+            var Store = GetStore(salesdoc.StoreCode);
+            viewModel.store = new Store
+            {
+                Code = model.StoreCode,
+                Name = model.StoreName,
+                Id = model.StoreId,
+                Address = Store.address,
+                Phone = Store.phone,
+                StoreCategory = model.StoreCategory,
+
+                Storage = new StorageViewModel
+                {
+                    code = model.StoreStorageCode,
+                    name = model.StoreStorageName,
+                    _id = model.StoreStorageId,
+
+                }
+            };
+            viewModel.shift = model.Shift;
+            viewModel.subTotal = model.SubTotal;
+            viewModel.totalProduct = model.TotalProduct;
+            viewModel.grandTotal = model.GrandTotal;
+            viewModel.totalDiscount = model.Discount;
+
+            viewModel.Id = model.Id;
+            viewModel.items = new List<SalesDocDetailViewModel>();
+            foreach (SalesDocDetail i in model.Details)
+            {
+                SalesDocDetailViewModel salesDocDetailViewModel = new SalesDocDetailViewModel();
+                PropertyCopier<SalesDocDetail, SalesDocDetailViewModel>.Copy(i, salesDocDetailViewModel);
+                salesDocDetailViewModel.Id = i.Id;
+                salesDocDetailViewModel.item = new ViewModels.NewIntegrationViewModel.ItemViewModel
+                {
+                    ArticleRealizationOrder = i.ItemArticleRealizationOrder,
+                    code = i.ItemCode,
+                    DomesticCOGS = i.ItemDomesticCOGS,
+                    DomesticRetail = i.ItemDomesticRetail,
+                    DomesticSale = i.ItemDomesticSale,
+                    DomesticWholeSale = i.ItemDomesticWholeSale,
+                    name = i.ItemName,
+                    Size = i.ItemSize,
+                    Uom = i.ItemUom,
+                    _id = i.ItemId
+                };
+                salesDocDetailViewModel.discount1 = i.Discount1;
+                salesDocDetailViewModel.discount2 = i.Discount2;
+                salesDocDetailViewModel.discountNominal = i.DiscountNominal;
+                salesDocDetailViewModel.itemCode = i.ItemCode;
+                salesDocDetailViewModel.itemId = (int)i.ItemId;
+                salesDocDetailViewModel.margin = i.Margin;
+                salesDocDetailViewModel.price = i.Price;
+                salesDocDetailViewModel.quantity = i.Quantity;
+                salesDocDetailViewModel.specialDiscount = i.SpesialDiscount;
+                salesDocDetailViewModel.total = i.Total;
+
+
+                viewModel.items.Add(salesDocDetailViewModel);
+            }
+            return viewModel;
+
+        }
+
         public string GenerateCode(string ModuleId)
         {
             var uid = ObjectId.GenerateNewId().ToString();
@@ -487,6 +594,21 @@ namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocReturnService
             string code = String.Format("{0}/{1}/{2}", hashids.Encode(diff), ModuleId, DateTime.Now.ToString("MM/yyyy"));
             return code;
         }
+
+        public List<SalesDoc> SalesReturnReport(string storecode, DateTimeOffset dateFrom, DateTimeOffset dateTo, string shift)
+        {
+            var a = DbSetSalesDoc.Where(m => m.StoreCode == storecode && m.Date.Date >= dateFrom.Date && m.Date.Date <= dateTo.Date && m.Shift == (string.IsNullOrWhiteSpace(shift) ? m.Shift : Convert.ToInt32(shift)) && m.isReturn == true)
+                    .Include(m => m.Details);
+
+            return a.ToList();
+        }
+
+        //public List<SalesDocDetailReturnItem> ReadSalesReturnItem(int id)
+        //{
+        //    var b = DbSetSales.Where(m => m.SalesDocDetailId == id);
+        //    return b.ToList();
+        //}
+
         public async Task<int> Create(SalesDocReturn model, SalesDocReturnViewModel viewModel)
         {
             int Created = 0;
@@ -659,7 +781,7 @@ namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocReturnService
                                 Size = d.item.Size,
                                 SpesialDiscount = d.specialDiscount,
                                 Total = d.total,
-                                SalesDocDetailId = d.Id,
+                                SalesDocDetailId = t.Id,
                                 
                             });
                         }
@@ -679,6 +801,9 @@ namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocReturnService
             return model.Id;
 
         }
+
+
+
         public async Task<int> AddReturnItems(List<SalesDocDetailReturnItem> model)
         {
             int Created = 0;

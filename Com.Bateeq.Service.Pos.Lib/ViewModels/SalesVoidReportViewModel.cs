@@ -17,6 +17,7 @@ namespace Com.Bateeq.Service.Pos.Lib.ViewModels
         public long ItemId { get; set; }
         public string ItemCode { get; set; }
         public string ItemName { get; set; }
+        public string ItemSize { get; set; }
         public double Quantity { get; set; }
         public double TotalPrice { get; set; }
         public int shift { get; set; }        

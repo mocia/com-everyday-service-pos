@@ -665,6 +665,7 @@ namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocService
                              isReturn = a.isReturn,
                              isVoid = a.isVoid
                          });
+
             return Query;
         }
 

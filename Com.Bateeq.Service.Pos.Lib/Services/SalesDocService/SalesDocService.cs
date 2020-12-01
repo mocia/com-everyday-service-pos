@@ -644,6 +644,9 @@ namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocService
 
                          select new SalesVoidReportViewModel
                          {
+                             _CreatedBy = a._CreatedBy,
+                             _LastModifiedBy = a._LastModifiedBy,
+                             _LastModifiedUtc = a._LastModifiedUtc,
                              date = a.Date,
                              code = a.Code,
                              grandTotal = a.GrandTotal,
@@ -653,6 +656,7 @@ namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocService
                              ItemId = b.ItemId,
                              ItemCode = b.ItemCode,
                              ItemName = b.ItemName,
+                             ItemSize = b.ItemSize,
                              Quantity = b.Quantity,
                              TotalPrice = b.Total,
                              shift = a.Shift,
@@ -661,6 +665,7 @@ namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocService
                              isReturn = a.isReturn,
                              isVoid = a.isVoid
                          });
+
             return Query;
         }
 

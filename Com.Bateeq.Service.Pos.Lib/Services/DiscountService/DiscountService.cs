@@ -169,97 +169,155 @@ namespace Com.Bateeq.Service.Pos.Lib.Services.DiscountService
             {
                 try
                 {
-                    var oldM = DbSet.Where(m => m.Id == id)
+                    var oldM = DbSet.AsNoTracking().Where(m => m.Id == id)
                     .Include(m => m.Items)
                     .ThenInclude(i => i.Details)
                     .FirstOrDefault();
 
-                    if (oldM != null && oldM.Id == id) {
-                        oldM.FlagForUpdate(IdentityService.Username, UserAgent);
-                        oldM.Information = model.Information;
-                        oldM.StartDate = model.StartDate;
-                        oldM.StoreCategory = model.StoreCategory;
-                        oldM.StoreName = model.StoreName;
-                        oldM.DiscountOne = model.DiscountOne;
-                        oldM.DiscountTwo = model.DiscountTwo;
-                        oldM.EndDate = model.EndDate;
+                    if(oldM != null && oldM.Id == id)
+                    {
+                        model.FlagForUpdate(IdentityService.Username, UserAgent);
 
-                        foreach (var oldItem in oldM.Items)
+                        foreach (var item in model.Items)
                         {
-                            var newItem = model.Items.FirstOrDefault(i => i.Id.Equals(oldItem.Id));
-                            if (newItem == null)
+                            if(item.Id == 0)
                             {
-                                oldItem.FlagForDelete(IdentityService.Username, UserAgent);
+                                item.FlagForCreate(IdentityService.Username, UserAgent);
+                                item.FlagForUpdate(IdentityService.Username, UserAgent);
                             }
                             else
                             {
-                                oldItem.FlagForUpdate(IdentityService.Username, UserAgent);
-                                oldItem.RealizationOrder = newItem.RealizationOrder;
+                                item.FlagForUpdate(IdentityService.Username, UserAgent);
                             }
-                            foreach (var item in model.Items)
-                            {
-                                foreach (var olddetail in oldItem.Details)
-                                {
-                                    var newdetail = item.Details.FirstOrDefault(d => d.Id.Equals(olddetail.Id));
-                                    if (newdetail == null)
-                                    {
-                                        olddetail.FlagForDelete(IdentityService.Username, UserAgent);
-                                    }
-                                    else
-                                    {
-                                        olddetail.FlagForUpdate(IdentityService.Username, UserAgent);
-                                        olddetail.ArticleRealizationOrder = newdetail.ArticleRealizationOrder;
-                                        olddetail.Code = newdetail.Code;
-                                        olddetail.DomesticCOGS = newdetail.DomesticCOGS;
-                                        olddetail.DomesticRetail = newdetail.DomesticRetail;
-                                        olddetail.DomesticSale = newdetail.DomesticSale;
-                                        olddetail.DomesticWholesale = newdetail.DomesticWholesale;
-                                        olddetail.InternationalCOGS = newdetail.InternationalCOGS;
-                                        olddetail.InternationalRetail = newdetail.InternationalRetail;
-                                        olddetail.InternationalSale = newdetail.InternationalSale;
-                                        olddetail.InternationalWholesale = newdetail.InternationalWholesale;
-                                        olddetail.ItemId = newdetail.ItemId;
-                                        olddetail.Name = newdetail.Name;
-                                        olddetail.Size = newdetail.Size;
-                                        olddetail.Uom = newdetail.Uom;
 
-                                    }
+                            foreach(var detail in item.Details){
+
+                                if(detail.Id == 0)
+                                {
+                                    detail.FlagForCreate(IdentityService.Username, UserAgent);
+                                    detail.FlagForUpdate(IdentityService.Username, UserAgent);
+                                }
+                                else
+                                {
+                                    detail.FlagForUpdate(IdentityService.Username, UserAgent);
                                 }
                             }
                         }
+                    }
 
-                            foreach (var item in model.Items.Where(i => i.Id == 0))
+                    this.DbSet.Update(model);
+
+                    foreach(var oldItem in oldM.Items)
+                    {
+                        var newItem = model.Items.FirstOrDefault(x => x.Id == oldItem.Id && x.RealizationOrder == oldItem.RealizationOrder);
+                        foreach(var oldDetail in oldItem.Details)
+                        {
+                            //var newdetail = model.Items.Any(i=>i.Details.Where(x=>x.Code == oldDetail.Code))
+                            if(newItem == null)
                             {
-                                item.FlagForCreate(IdentityService.Username,UserAgent);
-                                item.FlagForUpdate(IdentityService.Username,UserAgent);
-                                //item.Status = "Belum diterima Pembelian";
-
-                                oldM.Items.Add(item);
-
-                                foreach (var olditem in oldM.Items)
+                                oldItem.FlagForDelete(IdentityService.Username, UserAgent);
+                                DbContext.DiscountItems.Update(oldItem);
+                                oldDetail.FlagForDelete(IdentityService.Username, UserAgent);
+                                DbContext.DiscountDetails.Update(oldDetail);
+                            }
+                            else
+                            {
+                                var newDetail = newItem.Details.FirstOrDefault(x => x.Code == oldDetail.Code);
+                                if(newDetail == null)
                                 {
-                                    foreach(var detail in item.Details.Where(i => i.Id == 0))
-                                    {
-                                        detail.FlagForCreate(IdentityService.Username, UserAgent);
-                                        detail.FlagForUpdate(IdentityService.Username, UserAgent);
-                                        olditem.Details.Add(detail);
-                                    }
+                                    oldDetail.FlagForDelete(IdentityService.Username, UserAgent);
+                                    DbContext.DiscountDetails.Update(oldDetail);
                                 }
                             }
-
-                            foreach (var item in model.Items) {
-                                foreach (var olditem in oldM.Items)
-                                {
-                                    foreach(var detail in item.Details.Where(i => i.Id == 0))
-                                    {
-                                        detail.FlagForCreate(IdentityService.Username, UserAgent);
-                                        detail.FlagForUpdate(IdentityService.Username, UserAgent);
-
-                                        olditem.Details.Add(detail);
-                                    }
-                                }
-                            }
+                            
                         }
+                    }
+                    //if (oldM != null && oldM.Id == id) {
+                    //    oldM.FlagForUpdate(IdentityService.Username, UserAgent);
+                    //    oldM.Information = model.Information;
+                    //    oldM.StartDate = model.StartDate;
+                    //    oldM.StoreCategory = model.StoreCategory;
+                    //    oldM.StoreName = model.StoreName;
+                    //    oldM.DiscountOne = model.DiscountOne;
+                    //    oldM.DiscountTwo = model.DiscountTwo;
+                    //    oldM.EndDate = model.EndDate;
+
+                    //    foreach (var oldItem in oldM.Items)
+                    //    {
+                    //        var newItem = model.Items.FirstOrDefault(i => i.Id.Equals(oldItem.Id));
+                    //        if (newItem == null)
+                    //        {
+                    //            oldItem.FlagForDelete(IdentityService.Username, UserAgent);
+                    //        }
+                    //        else
+                    //        {
+                    //            oldItem.FlagForUpdate(IdentityService.Username, UserAgent);
+                    //            oldItem.RealizationOrder = newItem.RealizationOrder;
+                    //        }
+                    //        foreach (var item in model.Items)
+                    //        {
+                    //            foreach (var olddetail in oldItem.Details)
+                    //            {
+                    //                var newdetail = item.Details.FirstOrDefault(d => d.Id.Equals(olddetail.Id));
+                    //                if (newdetail == null)
+                    //                {
+                    //                    olddetail.FlagForDelete(IdentityService.Username, UserAgent);
+                    //                }
+                    //                else
+                    //                {
+                    //                    olddetail.FlagForUpdate(IdentityService.Username, UserAgent);
+                    //                    olddetail.ArticleRealizationOrder = newdetail.ArticleRealizationOrder;
+                    //                    olddetail.Code = newdetail.Code;
+                    //                    olddetail.DomesticCOGS = newdetail.DomesticCOGS;
+                    //                    olddetail.DomesticRetail = newdetail.DomesticRetail;
+                    //                    olddetail.DomesticSale = newdetail.DomesticSale;
+                    //                    olddetail.DomesticWholesale = newdetail.DomesticWholesale;
+                    //                    olddetail.InternationalCOGS = newdetail.InternationalCOGS;
+                    //                    olddetail.InternationalRetail = newdetail.InternationalRetail;
+                    //                    olddetail.InternationalSale = newdetail.InternationalSale;
+                    //                    olddetail.InternationalWholesale = newdetail.InternationalWholesale;
+                    //                    olddetail.ItemId = newdetail.ItemId;
+                    //                    olddetail.Name = newdetail.Name;
+                    //                    olddetail.Size = newdetail.Size;
+                    //                    olddetail.Uom = newdetail.Uom;
+
+                    //                }
+                    //            }
+                    //        }
+                    //    }
+
+                    //        foreach (var item in model.Items.Where(i => i.Id == 0))
+                    //        {
+                    //            item.FlagForCreate(IdentityService.Username,UserAgent);
+                    //            item.FlagForUpdate(IdentityService.Username,UserAgent);
+                    //            //item.Status = "Belum diterima Pembelian";
+
+                    //            oldM.Items.Add(item);
+
+                    //            foreach (var olditem in oldM.Items)
+                    //            {
+                    //                foreach(var detail in item.Details.Where(i => i.Id == 0))
+                    //                {
+                    //                    detail.FlagForCreate(IdentityService.Username, UserAgent);
+                    //                    detail.FlagForUpdate(IdentityService.Username, UserAgent);
+                    //                    olditem.Details.Add(detail);
+                    //                }
+                    //            }
+                    //        }
+
+                    //        foreach (var item in model.Items) {
+                    //            foreach (var olditem in oldM.Items)
+                    //            {
+                    //                foreach(var detail in item.Details.Where(i => i.Id == 0))
+                    //                {
+                    //                    detail.FlagForCreate(IdentityService.Username, UserAgent);
+                    //                    detail.FlagForUpdate(IdentityService.Username, UserAgent);
+
+                    //                    olditem.Details.Add(detail);
+                    //                }
+                    //            }
+                    //        }
+                    //    }
                     
                     Updated = await DbContext.SaveChangesAsync();
 

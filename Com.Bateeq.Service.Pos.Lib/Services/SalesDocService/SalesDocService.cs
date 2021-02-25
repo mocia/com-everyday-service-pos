@@ -19,6 +19,10 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Data;
+using System.IO;
+using System.Globalization;
+using Com.Bateeq.Service.Pos.Lib.ViewModels;
 
 namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocService
 {
@@ -131,7 +135,13 @@ namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocService
                     .FirstOrDefault();
             return a;
         }
+        public List<SalesDoc> OmzetReport(string storecode, DateTimeOffset dateFrom, DateTimeOffset dateTo, string shift)
+        {
+            var a = DbSet.Where(m => m.StoreCode == storecode && m.Date.Date >= dateFrom.Date && m.Date.Date <= dateFrom.Date && m.Shift == (string.IsNullOrWhiteSpace(shift) ? m.Shift : Convert.ToInt32(shift)))
+                    .Include(m => m.Details);
 
+            return a.ToList();
+        }
         public SalesDoc ReadModelByCode(string code, string storecode)
         {
             var a = DbSet.Where(m => m.Code == code && m.StoreStorageCode == storecode)
@@ -570,6 +580,110 @@ namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocService
             return Updated;
         }
 
+        public IQueryable<PaymentMethodReportViewModel> GetPaymentReportQuery(string storecode, DateTimeOffset dateFrom, DateTimeOffset dateTo, string shift)
+        {
+            var Query = (from c in DbContext.SalesDocs
+                         where c._IsDeleted == false
+                         //&& c.StorageId == (string.IsNullOrWhiteSpace(storageId) ? c.StorageId : storageId)
+                         && c.Date.Date >= dateFrom.Date
+                         && c.Date.Date <= dateTo.Date
+                         && c.StoreCode == (string.IsNullOrWhiteSpace(storecode) ? c.StoreCode : storecode)
+                         && c.Shift == (string.IsNullOrWhiteSpace(shift) ? c.Shift : Convert.ToInt32(shift))
+                         //&& a.ItemName == (string.IsNullOrWhiteSpace(info) ? a.ItemName : info)
+
+                         select new PaymentMethodReportViewModel
+                         {
+                             Code = c.Code == "" ? "-" : c.Code,
+                             Date = c.Date,
+                             BankName = c.BankName == "" ? "-" : c.BankName,
+                             Card = c.Card == "" ? "-" : c.Card,
+                             CardAmount = c.CardAmount,
+                             CardTypeName = c.CardTypeName == "" ? "-" : c.CardTypeName,
+                             IsVoid = c.isVoid,
+                             VoucherValue = c.VoucherValue,
+                             GrandTotal = c.GrandTotal,
+                             Shift = c.Shift,
+                             CashAmount = c.CashAmount,
+                             PaymnetType = c.PaymentType == "" ? "-" : c.PaymentType,
+                             SubTotal = c.SubTotal
+                         });
+
+
+            return Query;
+        }
+
+        public Tuple<List<PaymentMethodReportViewModel>, int> GetPaymentMethodReport(string storecode, DateTimeOffset dateFrom, DateTimeOffset dateTo, string shift, string info, int offset, string username, int page = 1, int size = 25, string Order = "{}")
+        {
+            var Query = GetPaymentReportQuery(storecode, dateFrom, dateTo, shift);
+
+            Dictionary<string, string> OrderDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Order);
+
+
+            // Pageable<InventoriesReportViewModel> pageable = new Pageable<InventoriesReportViewModel>(Query, page - 1, size);
+            List<PaymentMethodReportViewModel> Data = Query.ToList<PaymentMethodReportViewModel>();
+            // int TotalData = pageable.TotalCount;
+
+            return Tuple.Create(Data, Data.Count());
+
+        }
+
+        #region SalesVoidReport
+        public IQueryable<SalesVoidReportViewModel> GetSalesVoidReportQuery(string storeCode, DateTimeOffset dateFrom, DateTimeOffset dateTo, string shift)
+        {
+            var Query = (from a in DbContext.SalesDocs
+                         join b in DbContext.SalesDocDetails on a.Id equals b.SalesDocId
+                         where a._IsDeleted == false
+                         && b._IsDeleted == false
+                         && a.isVoid == true
+                         //&& c.StorageId == (string.IsNullOrWhiteSpace(storageId) ? c.StorageId : storageId)
+                         && a.Date.Date >= dateFrom.Date
+                         && a.Date.Date <= dateTo.Date
+                         && a.StoreCode == (string.IsNullOrWhiteSpace(storeCode) ? a.StoreCode : storeCode)
+                         && a.Shift == (string.IsNullOrWhiteSpace(shift) ? a.Shift : Convert.ToInt32(shift))
+                         //&& a.ItemName == (string.IsNullOrWhiteSpace(info) ? a.ItemName : info)
+
+                         select new SalesVoidReportViewModel
+                         {
+                             _CreatedBy = a._CreatedBy,
+                             _LastModifiedBy = a._LastModifiedBy,
+                             _LastModifiedUtc = a._LastModifiedUtc,
+                             date = a.Date,
+                             code = a.Code,
+                             grandTotal = a.GrandTotal,
+                             storeId = a.StoreId,
+                             storeCode = a.StoreCode,
+                             storeName = a.StoreName,
+                             ItemId = b.ItemId,
+                             ItemCode = b.ItemCode,
+                             ItemName = b.ItemName,
+                             ItemSize = b.ItemSize,
+                             Quantity = b.Quantity,
+                             TotalPrice = b.Total,
+                             shift = a.Shift,
+                             reference = a.Reference,
+                             remark = a.Remark,
+                             isReturn = a.isReturn,
+                             isVoid = a.isVoid
+                         });
+
+            return Query;
+        }
+
+        public Tuple<List<SalesVoidReportViewModel>, int> GetSalesVoidReport(string storeCode, DateTimeOffset dateFrom, DateTimeOffset dateTo, string shift, int offset, int page = 1, int size = 25, string Order = "{}")
+        {
+            var Query = GetSalesVoidReportQuery(storeCode, dateFrom, dateTo, shift);
+
+            Dictionary<string, string> OrderDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Order);
+
+
+            // Pageable<InventoriesReportViewModel> pageable = new Pageable<InventoriesReportViewModel>(Query, page - 1, size);
+            List<SalesVoidReportViewModel> Data = Query.ToList<SalesVoidReportViewModel>();
+            // int TotalData = pageable.TotalCount;
+            return Tuple.Create(Data, Data.Count());
+
+        }
+        #endregion
+
         public StoreViewModels GetStore(string storeCode)
         {
             string storeUri = "master/stores/code";
@@ -589,5 +703,452 @@ namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocService
             }
 
         }
+
+        #region omzet report
+        public IQueryable<OmzetReportViewModel> GetOmzetReportQuery(string storecode, DateTimeOffset dateFrom, DateTimeOffset dateTo, string shift)
+        {
+            var Query = (from c in DbContext.SalesDocs
+                         join a in DbContext.SalesDocDetails on c.Id equals a.SalesDocId
+                         where
+                         c._IsDeleted == false
+                         && a._IsDeleted == false
+                         //&& c.StorageId == (string.IsNullOrWhiteSpace(storageId) ? c.StorageId : storageId)
+                         && c.Date.Date >= dateFrom.Date
+                         && c.Date.Date <= dateTo.Date
+                         && c.StoreCode == (string.IsNullOrWhiteSpace(storecode) ? c.StoreCode : storecode)
+                         && c.Shift == (string.IsNullOrWhiteSpace(shift) ? c.Shift : Convert.ToInt32(shift))
+                         //&& a.ItemName == (string.IsNullOrWhiteSpace(info) ? a.ItemName : info)
+
+                         select new
+                         {
+                             ItemCode = a.ItemCode == "" ? "-" : a.ItemCode,
+                             ItemName = a.ItemName == "" ? "-" : a.ItemName,
+                             ItemSize = a.ItemSize == "" ? "-" : a.ItemSize,
+                             Price = a.Price,
+                             Quantity = a.Quantity,
+                             Discount1 = a.Discount1,
+                             Discount2 = a.Discount2,
+                             DiscountNominal = a.DiscountNominal,
+                             SpecialDiscount = a.SpesialDiscount,
+                             Margin = a.Margin,
+                             Code = c.Code == "" ? "-" : c.Code,
+                             Date = c.Date,
+                             IsVoid = c.isVoid,
+                             IsReturn = c.isReturn,
+                             Discount = c.Discount,
+                             PaymentType = c.PaymentType == "" ? "-" : c.PaymentType,
+                             Card = c.Card == "" ? "-" : c.Card,
+                             CardTypeName = c.CardTypeName == "" ? "-" : c.CardTypeName,
+                             CashAmount = c.CashAmount,
+                             CardAmount = c.CardAmount,
+                             BankName = c.BankName == "" ? "-" : c.BankName,
+                             BankCardName = c.BankCardName == "" ? "-" : c.BankCardName,
+                             SubTotal = c.SubTotal,
+                             StoreName = c.StoreName,
+                             Shift = c.Shift,
+                             Voucher = c.VoucherValue
+                         });
+
+            var Query2 = (from data in Query
+
+                          group data by new { data.Code } into groupData
+                          select new OmzetReportViewModel
+                          {
+                              StoreName = groupData.FirstOrDefault().StoreName,
+                              Shift = groupData.FirstOrDefault().Shift,
+                              Date = groupData.FirstOrDefault().Date,
+                              Code = groupData.FirstOrDefault().Code,
+                              PaymentType = groupData.FirstOrDefault().PaymentType,
+                              Card = groupData.FirstOrDefault().Card,
+                              CardTypeName = groupData.FirstOrDefault().CardTypeName,
+                              BankName = groupData.FirstOrDefault().BankName,
+                              BankCardName = groupData.FirstOrDefault().BankCardName,
+                              CashAmount = groupData.Sum(x => x.CashAmount),
+                              CardAmount = groupData.Sum(x => x.CardAmount),
+                              Voucher = groupData.FirstOrDefault().Voucher,
+                              TotalOmzetBruto = groupData.Sum(x => x.SubTotal),
+                              Discount = groupData.Sum(x => x.Discount),
+                              Margin = groupData.Sum(x => x.Margin),
+                              TotalOmzetNetto = groupData.Sum(x => x.SubTotal)
+                          }
+
+              );
+
+            return Query2;
+        }
+
+        public Tuple<List<OmzetReportViewModel>, int> GetOmzetReport(string storecode, DateTimeOffset dateFrom, DateTimeOffset dateTo, string shift, string info, int offset, string username, int page = 1, int size = 25, string Order = "{}")
+        {
+            var Query = GetOmzetReportQuery(storecode, dateFrom, dateTo, shift);
+
+            Dictionary<string, string> OrderDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Order);
+
+
+            // Pageable<InventoriesReportViewModel> pageable = new Pageable<InventoriesReportViewModel>(Query, page - 1, size);
+            List<OmzetReportViewModel> Data = Query.ToList<OmzetReportViewModel>();
+            // int TotalData = pageable.TotalCount;
+
+            return Tuple.Create(Data, Data.Count());
+
+        }
+
+
+        public MemoryStream GenerateExcelOmzet(string storecode, DateTimeOffset dateFrom, DateTimeOffset dateTo, string shift)
+        {
+            var Query = GetOmzetReportQuery(storecode, dateFrom, dateTo, shift);
+            // Query = Query.OrderByDescending(a => a.ReceiptDate);
+            DataTable result = new DataTable();
+            //No	Unit	Budget	Kategori	Tanggal PR	Nomor PR	Kode Barang	Nama Barang	Jumlah	Satuan	Tanggal Diminta Datang	Status	Tanggal Diminta Datang Eksternal
+
+            result.Columns.Add(new DataColumn() { ColumnName = "No", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Toko", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Shift", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Tanggal", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "No Pembayaran", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Tipe Pembayaran", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Kartu", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Jenis Kartu", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Bank (EDC)", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Bank (Kartu)", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Cash Amount", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Card Amount", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Voucher", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Total Omset Bruto", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Total Diskon", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Total Margin", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Total Omzet Netto", DataType = typeof(double) });
+
+
+
+            if (Query.ToArray().Count() == 0)
+                result.Rows.Add("", "", "", "", "", "", "", "", "", 0, 0, 0, 0, 0, 0);
+            // to allow column name to be generated properly for empty data as template
+            else
+            {
+                double totCashAmount = 0;
+                double totCardAmount = 0;
+                double totVoucher = 0;
+                double totTotalOmzetBruto = 0;
+                double totDiscount = 0;
+                double totMargin = 0;
+                double totTotalOmzetNetto = 0;
+                int index = 0;
+                foreach (var item in Query)
+                {
+                    index++;
+                    string date = item.Date == null ? "-" : item.Date.ToOffset(new TimeSpan(7, 0, 0)).ToString("dd MMM yyyy", new CultureInfo("id-ID"));
+                    //string pr_date = item.PRDate == null ? "-" : item.PRDate.ToOffset(new TimeSpan(offset, 0, 0)).ToString("dd MMM yyyy", new CultureInfo("id-ID"));
+                    //string do_date = item.DODate == null ? "-" : item.ReceiptDate.ToOffset(new TimeSpan(offset, 0, 0)).ToString("dd MMM yyyy", new CultureInfo("id-ID"));
+
+                    result.Rows.Add(index, item.StoreName, item.Shift, date, item.Code, item.PaymentType, item.Card, item.CardTypeName, item.BankName, item.BankCardName, item.CashAmount, item.CardAmount, item.Voucher,
+                        item.TotalOmzetBruto, item.Discount, item.Margin, item.TotalOmzetNetto);
+
+                    totCashAmount = +item.CashAmount;
+                    totCardAmount = +item.CardAmount;
+                    totVoucher = +item.Voucher;
+                    totTotalOmzetBruto = +item.TotalOmzetBruto;
+                    totDiscount = +item.Discount;
+                    totMargin = +item.Margin;
+                    totTotalOmzetNetto = +item.TotalOmzetNetto;
+
+                }
+
+                result.Rows.Add("", "", "", "", "", "", "", "", "", "", totCashAmount, totCardAmount, totVoucher, totTotalOmzetBruto, totDiscount, totMargin, totTotalOmzetNetto);
+            }
+
+            return Excel.CreateExcel(new List<KeyValuePair<DataTable, string>>() { new KeyValuePair<DataTable, string>(result, "Territory") }, true);
+        }
+        #endregion
+
+
+
+        #region OmzetDailyReport
+        public TotalCategoryViewModel GetOmzetDayReportQuery(DateTimeOffset dateFrom, DateTimeOffset dateTo)
+        {
+
+            var Store = GetStoreData();
+
+            var SalesDocs = (from c in DbContext.SalesDocs
+                             where
+                               c._IsDeleted == false
+                               && c.Date.Date >= dateFrom.Date
+                               && c.Date.Date <= dateTo.Date
+
+                             select new
+                             {
+                                 StoreCode = c.StoreCode,
+                                 SubTotal = c.SubTotal,
+                                 TotalProduct = c.TotalProduct,
+                                 Remark = c.Remark
+                             }
+
+                );
+
+            var StandAlone = (from a in Store
+                              join c in SalesDocs on a.Code equals c.StoreCode into d
+                              from c in d.DefaultIfEmpty()
+                              where
+                              // c._IsDeleted == false
+                               //&& c.Date.Date >= dateFrom.Date
+                               //&& c.Date.Date <= dateTo.Date
+                              a.SalesCategory == "STAND ALONE"
+                               && a.OnlineOffline == "OFFLINE"
+                              && a.Status == "OPEN"
+                              select new
+                              {
+                                  storeName = a.Name,
+                                  storeCategory = a.SalesCategory,
+                                  offlineOnline = a.OnlineOffline,
+                                  subTotal = c == null ? 0 : c.SubTotal,
+                                  totalProduct = c == null ? 0 : c.TotalProduct,
+                                  remark = c == null ? "" : c.Remark
+
+                              });
+            var Konsinyasi = (from a in Store
+                              join c in SalesDocs on a.Code equals c.StoreCode into d
+                              from c in d.DefaultIfEmpty()
+                              where
+                              a.SalesCategory == "KONSINYASI"
+                              && a.Status == "OPEN"
+
+                              select new
+                              {
+                                  storeName = a.Name,
+                                  storeCategory = a.SalesCategory,
+                                  offlineOnline = a.OnlineOffline,
+                                  subTotal = c == null ? 0 : c.SubTotal,
+                                  totalProduct = c == null ? 0 : c.TotalProduct,
+                                  remark = c == null ? "" : c.Remark
+
+                              });
+
+            var Online = (from a in Store
+                          join c in SalesDocs on a.Code equals c.StoreCode into d
+                          from c in d.DefaultIfEmpty()
+                          where
+                          a.OnlineOffline == "ONLINE"
+                          && a.Status == "OPEN"
+                          select new
+                          {
+                              storeName = a.Name,
+                              storeCategory = a.SalesCategory,
+                              offlineOnline = a.OnlineOffline,
+                              subTotal = c == null ? 0 : c.SubTotal,
+                              totalProduct = c == null ? 0 : c.TotalProduct,
+                              remark = c == null ? "" : c.Remark
+
+                          });
+            var WholeSale = (from a in Store
+                             join c in SalesDocs on a.Code equals c.StoreCode into d
+                             from c in d.DefaultIfEmpty()
+                             where
+                              a.SalesCategory == "PENJUALAN UMUM"
+                             && a.Status == "OPEN"
+
+                             select new
+                             {
+                                 storeName = a.Name,
+                                 storeCategory = a.SalesCategory,
+                                 offlineOnline = a.OnlineOffline,
+                                 subTotal = c == null ? 0 : c.SubTotal,
+                                 totalProduct = c == null ? 0 : c.TotalProduct,
+                                 remark = c == null ? "" : c.Remark
+
+                             });
+
+            var Vvip = (from a in Store
+                             join c in SalesDocs on a.Code equals c.StoreCode into d
+                             from c in d.DefaultIfEmpty()
+                             where
+                              a.SalesCategory == "PENJUALAN VVIP"
+                             && a.Status == "OPEN"
+
+                             select new
+                             {
+                                 storeName =  a.Name,
+                                 storeCategory = a.SalesCategory,
+                                 offlineOnline = a.OnlineOffline,
+                                 subTotal = c == null ? 0 : c.SubTotal,
+                                 totalProduct = c == null ? 0 : c.TotalProduct,
+                                 remark = c == null ? "" : c.Remark
+
+                             });
+
+            var CombineData = StandAlone.Union(Konsinyasi).Union(Online).Union(WholeSale).Union(Vvip).ToList();
+
+            var Query = (from data in CombineData
+
+                         group data by new { data.storeCategory, data.offlineOnline } into groupData
+                         select new CategoryViewModel
+                         {
+                             CategoryName = groupData.FirstOrDefault().storeCategory,
+                             OfflineOnline = groupData.FirstOrDefault().offlineOnline,
+                             GrandTotal = groupData.Sum(x => x.subTotal),
+                             Count = groupData.Sum(x => x.totalProduct),
+
+                         }).ToList();
+
+            CategoryCollectViewModel CategoryCollect = new CategoryCollectViewModel
+            {
+                StandAlone = Query.Find(x => x.CategoryName == "STAND ALONE"),
+                Konsinyasi = Query.Find(x => x.CategoryName == "KONSINYASI"),
+                Online = Query.Find(x => x.OfflineOnline == "ONLINE"),
+                WholeSale = Query.Find(x => x.CategoryName == "PENJUALAN UMUM"),
+                vvip = Query.Find(x => x.CategoryName == "PENJUALAN VVIP")
+
+
+
+            };
+
+            List<TotalViewModel> Stand_Alone = new List<TotalViewModel>();
+            foreach (var ip in CombineData.Where(x => x.storeCategory == "STAND ALONE" && x.offlineOnline == "OFFLINE"))
+            {
+                Stand_Alone.Add(new TotalViewModel
+                {
+                    Count = ip.totalProduct,
+                    GrandTotal = ip.subTotal,
+                    Store = new StoreViewModel
+                    {
+                        Name = ip.storeName,
+                        StoreCategory = ip.storeCategory
+
+                    }
+
+                });
+            };
+
+            List<TotalViewModel> Konsinyasi2 = new List<TotalViewModel>();
+            foreach (var ip in CombineData.Where(x => x.storeCategory == "KONSINYASI"))
+            {
+                Konsinyasi2.Add(new TotalViewModel
+                {
+                    Count = ip.totalProduct,
+                    GrandTotal = ip.subTotal,
+                    Store = new StoreViewModel
+                    {
+                        Name = ip.storeName,
+                        StoreCategory = ip.storeCategory
+
+                    }
+
+                });
+            };
+
+            List<TotalViewModel> Online2 = new List<TotalViewModel>();
+            foreach (var ip in CombineData.Where(x => x.offlineOnline == "ONLINE"))
+            {
+                Online2.Add(new TotalViewModel
+                {
+                    Count = ip.totalProduct,
+                    GrandTotal = ip.subTotal,
+                    Store = new StoreViewModel
+                    {
+                        Name = ip.storeName,
+                        StoreCategory = ip.storeCategory
+
+                    }
+
+                });
+            };
+
+            List<TotalViewModel> WholeSale2 = new List<TotalViewModel>();
+            foreach (var ip in CombineData.Where(x => x.storeCategory == "PENJUALAN UMUM"))
+            {
+                WholeSale2.Add(new TotalViewModel
+                {
+                    Count = ip.totalProduct,
+                    GrandTotal = ip.subTotal,
+                    Store = new StoreViewModel
+                    {
+                        Name = ip.storeName,
+                        StoreCategory = ip.storeCategory,
+                        Remark = ip.remark
+
+                    }
+
+                });
+            };
+
+            List<TotalViewModel> Vvip2 = new List<TotalViewModel>();
+            foreach (var ip in CombineData.Where(x => x.storeCategory == "PENJUALAN VVIP"))
+            {
+                Vvip2.Add(new TotalViewModel
+                {
+                    Count = ip.totalProduct,
+                    GrandTotal = ip.subTotal,
+                    Store = new StoreViewModel
+                    {
+                        Name = ip.storeName,
+                        StoreCategory = ip.storeCategory,
+                        Remark = ip.remark
+
+                    }
+
+                });
+            };
+
+
+
+            DataViewModel dataView = new DataViewModel
+            {
+                StandAlone = Stand_Alone,
+                Konsinyasi = Konsinyasi2,
+                Online = Online2,
+                WholeSale = WholeSale2,
+                vvip = Vvip2
+            };
+
+            TotalCategoryViewModel totalCategory = new TotalCategoryViewModel
+            {
+                CategoryList = CategoryCollect,
+                DataList = dataView
+            };
+
+            return totalCategory;
+        }
+
+        public Tuple<TotalCategoryViewModel, int> GetOmzetDailyReport(DateTimeOffset dateFrom, DateTimeOffset dateTo, int offset, int page = 1, int size = 25, string Order = "{}")
+        {
+            var Query = GetOmzetDayReportQuery(dateFrom, dateTo);
+
+            Dictionary<string, string> OrderDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Order);
+
+
+            // Pageable<InventoriesReportViewModel> pageable = new Pageable<InventoriesReportViewModel>(Query, page - 1, size);
+            //TotalCategoryViewModel> Data = Query.ToList<TotalCategoryViewModel>();
+            // int TotalData = pageable.TotalCount;
+
+            return Tuple.Create(Query, 1);
+
+        }
+
+
+        private List<StoreViewModel> GetStoreData()
+        {
+            string StoreUri = "master/stores?Size=200";
+
+            string uri = StoreUri;
+            IHttpClientService httpClient = (IHttpClientService)this.ServiceProvider.GetService(typeof(IHttpClientService));
+            var response = httpClient.GetAsync($"{APIEndpoint.Core}{uri}").Result;
+            if (response.IsSuccessStatusCode)
+            {
+                var content = response.Content.ReadAsStringAsync().Result;
+                Dictionary<string, object> result = JsonConvert.DeserializeObject<Dictionary<string, object>>(content);
+                List<StoreViewModel> upo = JsonConvert.DeserializeObject<List<StoreViewModel>>(result.GetValueOrDefault("data").ToString()); ;
+                return upo;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        #endregion 
+
+
+
+
+
+
     }
 }

@@ -99,9 +99,15 @@ namespace Com.Bateeq.Service.Pos.Lib.ViewModels.SalesDoc
                         itemErrorCount++;
                         itemError += "RO: 'No RO selected', ";
                     }
-                    
+
+                    if (item.quantity == 0)
+                    {
+                        itemErrorCount++;
+                        itemError += "there is no item left ";
+                    }
 
                     itemError += "}, ";
+                    
                 }
 
                 itemError += "]";

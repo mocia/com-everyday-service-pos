@@ -1144,11 +1144,41 @@ namespace Com.Bateeq.Service.Pos.Lib.Services.SalesDocService
         }
 
         #endregion 
+        /*
+        public List<SalesDocByRoViewModel> GetByRO(string articleRealizationOrder)
+        {
+            var Query = GetByRoQuery(articleRealizationOrder);
+            return Query.ToList();
+        }
+        */
+        public List<SalesDocByRoViewModel> GetByRO(string articleRealizationOrder)
+        {
+            var Query = (from a in DbContext.SalesDocs
+                         join b in DbContext.SalesDocDetails on a.Id equals b.SalesDocId
 
+                         where b.ItemArticleRealizationOrder == articleRealizationOrder
+                         && a.isReturn == false
+                         && a.isVoid == false
+                         && a._IsDeleted == false
+                         && b._IsDeleted == false
 
+                         orderby b._CreatedUtc descending
 
+                         group new { a, b } by new { a.StoreCode, a.StoreName, b.ItemSize, b.Quantity ,b.ItemArticleRealizationOrder, b.ItemCode } into data
+                         
+                         select new SalesDocByRoViewModel
+                         {
+                             StoreCode = data.Key.StoreCode,
+                             StoreName = data.Key.StoreName,
+                             ItemArticleRealizationOrder = data.Key.ItemArticleRealizationOrder,
+                             ItemCode = data.Key.ItemCode,
 
+                             size = data.Key.ItemSize,
+                             quantityOnSales = data.Sum(x => x.b.Quantity),
+                         });
 
+            return Query.ToList();
 
+        }
     }
 }

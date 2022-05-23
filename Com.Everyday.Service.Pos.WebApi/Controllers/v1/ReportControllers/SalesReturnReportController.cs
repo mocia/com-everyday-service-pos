@@ -13,7 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Com.MajorMinor.Service.Pos.WebApi.Controllers.v1.ReportControllers
+namespace Com.Everyday.Service.Pos.WebApi.Controllers.v1.ReportControllers
 {
 
     [Produces("application/json")]

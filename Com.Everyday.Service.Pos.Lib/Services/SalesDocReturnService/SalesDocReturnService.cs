@@ -16,13 +16,11 @@ using Com.Everyday.Service.Pos.Lib.ViewModels.SalesDoc;
 using System.Threading.Tasks;
 using Com.Everyday.Service.Pos.Lib.Services.SalesDocService;
 using Com.Moonlay.Models;
-using Com.Everyday.Service.Pos.Lib.Models.SalesDoc;
 using Com.Everyday.Service.Pos.Lib.ViewModels.NewIntegrationViewModel;
 using Com.Everyday.Service.Pos.Lib.Interfaces;
 using System.Net.Http;
 using MongoDB.Bson;
-using HashidsNet;
-using Com.Everyday.Service.Pos.Lib.ViewModels.NewIntegrationViewModel;
+using HashidsNet; 
 
 namespace Com.Everyday.Service.Pos.Lib.Services.SalesDocReturnService
 {

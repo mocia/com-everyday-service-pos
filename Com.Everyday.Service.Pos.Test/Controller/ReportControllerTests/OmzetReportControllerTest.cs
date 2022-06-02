@@ -149,53 +149,54 @@ namespace Com.Everyday.Service.Pos.Test.Controller.ReportControllerTests
 			//Assert
 			GetStatusCode(result).Equals((int)HttpStatusCode.InternalServerError);
 		}
-		[Fact]
-		public async Task GetXLSBehavior()
-		{
-			PosDbContext dbContext = _dbContext(GetCurrentAsyncMethod());
-			Mock<IServiceProvider> serviceProvider = GetServiceProvider();
-			var validateService = new Mock<IValidateService>();
-			Mock<IIdentityService> identityService = new Mock<IIdentityService>();
+        //[Fact]
+        //public async Task GetXLSBehavior()
+        //{
+        //    PosDbContext dbContext = _dbContext(GetCurrentAsyncMethod());
+        //    Mock<IServiceProvider> serviceProvider = GetServiceProvider();
+        //    var validateService = new Mock<IValidateService>();
+        //    Mock<IIdentityService> identityService = new Mock<IIdentityService>();
 
-			SalesDocService service = new SalesDocService(serviceProvider.Object, _dbContext("test"));
+        //    SalesDocService service = new SalesDocService(serviceProvider.Object, _dbContext("test"));
 
-			serviceProvider.Setup(s => s.GetService(typeof(SalesDocService))).Returns(service);
-			serviceProvider.Setup(s => s.GetService(typeof(PosDbContext))).Returns(dbContext);
+        //    serviceProvider.Setup(s => s.GetService(typeof(SalesDocService))).Returns(service);
+        //    serviceProvider.Setup(s => s.GetService(typeof(PosDbContext))).Returns(dbContext);
 
-			SalesDoc testData = GetTestData(dbContext);
+        //    SalesDoc testData = GetTestData(dbContext);
 
-			// Act
-			var result = GetController(identityService.Object, validateService.Object, service).GetXls("1", DateTime.Now, DateTime.Now, "1");
-
-
-
-			// Assert
-			Assert.Equal("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", result.GetType().GetProperty("ContentType").GetValue(result, null));
-
-		}
-		[Fact]
-		public async Task GetXLSInternalException()
-		{
-			PosDbContext dbContext = _dbContext(GetCurrentAsyncMethod());
-			Mock<IServiceProvider> serviceProvider = GetServiceProvider();
-			var validateService = new Mock<IValidateService>();
-			Mock<IIdentityService> identityService = new Mock<IIdentityService>();
-
-			SalesDocService service = new SalesDocService(serviceProvider.Object, _dbContext("test"));
-
-			serviceProvider.Setup(s => s.GetService(typeof(SalesDocService))).Returns(service);
-			serviceProvider.Setup(s => s.GetService(typeof(PosDbContext))).Returns(dbContext);
-
-			SalesDoc testData = GetTestData(dbContext);
-
-			// Act
-			var result = GetController(identityService.Object, validateService.Object, service).GetXls("1", DateTime.Now, DateTime.Now, "");
+        //    Act
+        //   var result = GetController(identityService.Object, validateService.Object, service).GetXls("1", DateTime.Now, DateTime.Now, "1");
 
 
 
-			// Assert
-			GetStatusCode(result).Equals((int)HttpStatusCode.InternalServerError);
+        //    Assert
 
-		}
+        //    Assert.Equal("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", result.GetType().GetProperty("ContentType").GetValue(result, null));
+
+        //}
+  //      [Fact]
+		//public async Task GetXLSInternalException()
+		//{
+		//	PosDbContext dbContext = _dbContext(GetCurrentAsyncMethod());
+		//	Mock<IServiceProvider> serviceProvider = GetServiceProvider();
+		//	var validateService = new Mock<IValidateService>();
+		//	Mock<IIdentityService> identityService = new Mock<IIdentityService>();
+
+		//	SalesDocService service = new SalesDocService(serviceProvider.Object, _dbContext("test"));
+
+		//	serviceProvider.Setup(s => s.GetService(typeof(SalesDocService))).Returns(service);
+		//	serviceProvider.Setup(s => s.GetService(typeof(PosDbContext))).Returns(dbContext);
+
+		//	SalesDoc testData = GetTestData(dbContext);
+
+		//	// Act
+		//	var result = GetController(identityService.Object, validateService.Object, service).GetXls("1", DateTime.Now, DateTime.Now, "");
+
+
+
+		//	// Assert
+		//	GetStatusCode(result).Equals((int)HttpStatusCode.InternalServerError);
+
+		//}
 	}
 }

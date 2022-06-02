@@ -522,25 +522,29 @@ namespace Com.Everyday.Service.Pos.Lib.Services.SalesDocService
 
                         foreach(var i in oldM.Details)
                         {
-                            transferInDocItems.Add(new TransferInDocItemViewModel
+                            if (!i.isReturn)
                             {
-                                item = new ItemViewModels
+                                transferInDocItems.Add(new TransferInDocItemViewModel
                                 {
-                                    articleRealizationOrder = i.ItemArticleRealizationOrder,
-                                    code = i.ItemCode,
-                                    domesticCOGS = i.ItemDomesticCOGS,
-                                    domesticRetail = i.ItemDomesticRetail,
-                                    domesticSale = i.ItemDomesticSale,
-                                    domesticWholesale = i.ItemDomesticWholeSale,
-                                    name = i.ItemName,
-                                    size = i.ItemSize,
-                                    uom = i.ItemUom,
-                                    _id = i.ItemId
-                                },
-                                remark = oldM.Remark,
-                                sendquantity = i.Quantity
-                            });
+                                    item = new ItemViewModels
+                                    {
+                                        articleRealizationOrder = i.ItemArticleRealizationOrder,
+                                        code = i.ItemCode,
+                                        domesticCOGS = i.ItemDomesticCOGS,
+                                        domesticRetail = i.ItemDomesticRetail,
+                                        domesticSale = i.ItemDomesticSale,
+                                        domesticWholesale = i.ItemDomesticWholeSale,
+                                        name = i.ItemName,
+                                        size = i.ItemSize,
+                                        uom = i.ItemUom,
+                                        _id = i.ItemId
+                                    },
+                                    remark = oldM.Remark,
+                                    sendquantity = i.Quantity
+                                });
+                            }
                         }
+
                         transferInDocView.code = GenerateCode("voidsales");
                         transferInDocView.destination = new DestinationViewModel
                         {

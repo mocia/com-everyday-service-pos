@@ -85,6 +85,7 @@ namespace Com.Everyday.Service.Pos.WebApi.Controllers.v1.SalesDocControllers
         {
             try
             {
+                VerifyUser();
 
                 SalesDocReturn model = Service.ReadModelById(id);
                 SalesDocReturnViewModel viewModel = Service.MapToViewModel(model);
@@ -145,7 +146,5 @@ namespace Com.Everyday.Service.Pos.WebApi.Controllers.v1.SalesDocControllers
 
 
         }
-
-
     }
 }

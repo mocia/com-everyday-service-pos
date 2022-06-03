@@ -37,6 +37,7 @@ namespace Com.Everyday.Service.Pos.Test.DataUtil.SalesDocDataUtils
                 BankName = "BankName",
                 BankCode = "BankCode",
                 StoreName= "name",
+                Card="card",
                 Details = new List<SalesDocDetail>()
                 {
                     new SalesDocDetail()

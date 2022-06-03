@@ -84,7 +84,29 @@ namespace Com.Everyday.Service.Pos.Test.Controller.SalesDocControllerTests
             return data;
         }
 
-        protected int GetStatusCode(IActionResult response)
+
+		public SalesDocViewModel GetViewModel(PosDbContext dbContext)
+		{
+			SalesDoc data = new SalesDoc();
+			dbContext.SalesDocs.Add(data);
+			dbContext.SaveChanges();
+			SalesDocViewModel viewModel = new SalesDocViewModel();
+			viewModel.code = data.Code;
+			viewModel.date = data.Date;
+			return viewModel;
+		}
+		 
+		public List<SalesDoc> GetListTestData(PosDbContext dbContext)
+		{
+			List<SalesDoc> dataList = new List<SalesDoc>();
+			SalesDoc data = new SalesDoc();
+			dbContext.SalesDocs.Add(data);
+			dataList.Add(data);
+			dbContext.SaveChanges();
+
+			return dataList;
+		}
+		protected int GetStatusCode(IActionResult response)
         {
             return (int)response.GetType().GetProperty("StatusCode").GetValue(response, null);
         }
@@ -236,39 +258,234 @@ namespace Com.Everyday.Service.Pos.Test.Controller.SalesDocControllerTests
             //Assert
             int statusCode = this.GetStatusCode(response);
             Assert.Equal((int)HttpStatusCode.InternalServerError, statusCode);
-        }
+        } 
+		[Fact]
+		public void PUT_OK()
+		{
+			//Setup
+			PosDbContext dbContext = _dbContext(GetCurrentAsyncMethod());
+			Mock<IServiceProvider> serviceProvider = GetServiceProvider();
+			var validateService = new Mock<IValidateService>();
+			Mock<IIdentityService> identityService = new Mock<IIdentityService>();
 
-        //[Fact]
-        //public void POST_BadRequest()
-        //{
-        //    //Setup
-        //    PosDbContext dbContext = _dbContext(GetCurrentAsyncMethod());
-        //    Mock<IServiceProvider> serviceProvider = GetServiceProvider();
-        //    var validateService = new Mock<IValidateService>();
-        //    validateService
-        //        .Setup(v => v.Validate(It.IsAny<SalesDocViewModel>()))
-        //        .Throws(get());
-        //    Mock<IIdentityService> identityService = new Mock<IIdentityService>();
+			SalesDocService service = new SalesDocService(serviceProvider.Object, _dbContext("test"));
 
-        //    SalesDocService service = new SalesDocService(serviceProvider.Object, _dbContext("test"));
+			serviceProvider.Setup(s => s.GetService(typeof(SalesDocService))).Returns(service);
+			serviceProvider.Setup(s => s.GetService(typeof(PosDbContext))).Returns(dbContext);
 
-        //    serviceProvider.Setup(s => s.GetService(typeof(SalesDocService))).Returns(service);
-        //    serviceProvider.Setup(s => s.GetService(typeof(PosDbContext))).Returns(dbContext);
-        //    SalesDoc testData = GetTestData(dbContext);
+			var serviceMock = new Mock<ISalesDocService>();
+			serviceMock
+				.Setup(s => s.Void(It.IsAny<int>(),"user",7))
+				.Throws(new Exception());
 
-        //    var validateServiceMock = new Mock<IValidateService>();
-        //    validateServiceMock.Setup(v => v.Validate(It.IsAny<SalesDoc>())).Verifiable();
-        //    SalesDocViewModel dataVM = new SalesDocViewModel();
+			SalesDocViewModel dataVM = new SalesDocViewModel();
+			//Act
+			IActionResult response = GetController(identityService.Object, validateService.Object, serviceMock.Object).Put(dataVM.Id,null).Result;
 
-        //    serviceProvider.Setup(sp => sp.GetService(typeof(IValidateService))).Returns(validateServiceMock.Object);
-        //    //Act
-        //    IActionResult response = GetController(identityService.Object, validateService.Object, service).Post(dataVM).Result;
+			//Assert
+			int statusCode = this.GetStatusCode(response);
+			Assert.Equal((int)HttpStatusCode.Created, statusCode);
+		}
+		[Fact]
+		public void PUT_Error()
+		{
+			//Setup
+			PosDbContext dbContext = _dbContext(GetCurrentAsyncMethod());
+			Mock<IServiceProvider> serviceProvider = GetServiceProvider();
+			var validateService = new Mock<IValidateService>();
+			Mock<IIdentityService> identityService = new Mock<IIdentityService>();
 
-        //    //Assert
-        //    int statusCode = this.GetStatusCode(response);
-        //    Assert.Equal((int)HttpStatusCode.BadRequest, statusCode);
-        //}
+			SalesDocService service = new SalesDocService(serviceProvider.Object, _dbContext("test"));
+
+			serviceProvider.Setup(s => s.GetService(typeof(SalesDocService))).Returns(service);
+			serviceProvider.Setup(s => s.GetService(typeof(PosDbContext))).Returns(dbContext);
+
+			var serviceMock = new Mock<ISalesDocService>();
+			serviceMock
+				.Setup(s => s.Void(It.IsAny<int>(), null, 7))
+				.Throws(new Exception());
+
+			SalesDocViewModel dataVM = new SalesDocViewModel();
+			//Act
+			IActionResult response = GetController(identityService.Object, validateService.Object, serviceMock.Object).Put(0, null).Result;
+
+			//Assert
+			int statusCode = this.GetStatusCode(response);
+			Assert.Equal((int)HttpStatusCode.InternalServerError , statusCode);
+		}
+		[Fact]
+		public void GetVoidbyCode_ERROR()
+		{
+			//Setup
+			PosDbContext dbContext = _dbContext(GetCurrentAsyncMethod());
+			Mock<IServiceProvider> serviceProvider = GetServiceProvider();
+			var validateService = new Mock<IValidateService>();
+			Mock<IIdentityService> identityService = new Mock<IIdentityService>();
+
+			SalesDocService service = new SalesDocService(serviceProvider.Object, _dbContext("test"));
+
+			serviceProvider.Setup(s => s.GetService(typeof(SalesDocService))).Returns(service);
+			serviceProvider.Setup(s => s.GetService(typeof(PosDbContext))).Returns(dbContext);
+
+			var serviceMock = new Mock<ISalesDocService>();
+			serviceMock
+				.Setup(s => s.ReadModelByCode(It.IsAny<string>(), It.IsAny<string>()))
+				.Throws(new Exception());
+
+			SalesDocViewModel dataVM = new SalesDocViewModel();
+			//Act
+			IActionResult response = GetController(identityService.Object, validateService.Object, serviceMock.Object).GetVoidbyCode("code", "storecode");
+
+			//Assert
+			int statusCode = this.GetStatusCode(response);
+			Assert.Equal((int)HttpStatusCode.InternalServerError, statusCode);
+		}
+		 
+		[Fact]
+		public void GetVoidbyCode_NotFound()
+		{
+			//Setup
+			PosDbContext dbContext = _dbContext(GetCurrentAsyncMethod());
+			Mock<IServiceProvider> serviceProvider = GetServiceProvider();
+			var validateService = new Mock<IValidateService>();
+			Mock<IIdentityService> identityService = new Mock<IIdentityService>();
+
+			SalesDocService service = new SalesDocService(serviceProvider.Object, _dbContext("test"));
+
+			serviceProvider.Setup(s => s.GetService(typeof(SalesDocService))).Returns(service);
+			serviceProvider.Setup(s => s.GetService(typeof(PosDbContext))).Returns(dbContext);
+
+			var serviceMock = new Mock<ISalesDocService>();
+			serviceMock
+				.Setup(s => s.ReadModelByCode(null, null))
+				.Returns( (SalesDoc)null);
+
+			SalesDocViewModel dataVM = new SalesDocViewModel();
+			//Act
+			IActionResult response = GetController(identityService.Object, validateService.Object, serviceMock.Object).GetVoidbyCode("", "");
+
+			//Assert
+			int statusCode = this.GetStatusCode(response);
+			Assert.Equal((int)HttpStatusCode.NotFound, statusCode);
+		}
+		[Fact]
+		public void GetVoidbyCode_OK()
+		{
+			//Setup
+			PosDbContext dbContext = _dbContext(GetCurrentAsyncMethod());
+			Mock<IServiceProvider> serviceProvider = GetServiceProvider();
+			var validateService = new Mock<IValidateService>();
+			Mock<IIdentityService> identityService = new Mock<IIdentityService>();
+
+			SalesDocService service = new SalesDocService(serviceProvider.Object, _dbContext("test"));
+
+			serviceProvider.Setup(s => s.GetService(typeof(SalesDocService))).Returns(service);
+			serviceProvider.Setup(s => s.GetService(typeof(PosDbContext))).Returns(dbContext);
+
+			var serviceMock = new Mock<ISalesDocService>();
+			serviceMock
+				.Setup(s => s.ReadModelByCode(It.IsAny<string>(), It.IsAny<string>()))
+				.Returns( new SalesDoc());
+
+			SalesDocViewModel dataVM = new SalesDocViewModel();
+			//Act
+			IActionResult response = GetController(identityService.Object, validateService.Object, serviceMock.Object).GetVoidbyCode("", "");
+
+			//Assert
+			int statusCode = this.GetStatusCode(response);
+			Assert.Equal((int)HttpStatusCode.OK, statusCode);
+		}
+		[Fact]
+		public void Getvoidable_Error()
+		{
+			//Setup
+			PosDbContext dbContext = _dbContext(GetCurrentAsyncMethod());
+			Mock<IServiceProvider> serviceProvider = GetServiceProvider();
+			var validateService = new Mock<IValidateService>();
+			Mock<IIdentityService> identityService = new Mock<IIdentityService>();
+
+			SalesDocService service = new SalesDocService(serviceProvider.Object, _dbContext("test"));
+
+			serviceProvider.Setup(s => s.GetService(typeof(SalesDocService))).Returns(service);
+			serviceProvider.Setup(s => s.GetService(typeof(PosDbContext))).Returns(dbContext);
+
+			var serviceMock = new Mock<ISalesDocService>();
+		 	 
+			serviceMock
+				.Setup(s => s.ReadModelVoid(It.IsAny<string>(),1,25,"","","", It.IsAny<string>()))
+					.Throws(new Exception());
+
+			SalesDocViewModel dataVM = new SalesDocViewModel();
+			//Act
+			IActionResult response = GetController(identityService.Object, validateService.Object, serviceMock.Object).GetVoid("",1,25,"","","");
+
+			//Assert
+			int statusCode = this.GetStatusCode(response);
+			Assert.Equal((int)HttpStatusCode.InternalServerError, statusCode);
+		}
+		[Fact]
+		public void Getvoidable_OK()
+		{
+			//Setup
+			PosDbContext dbContext = _dbContext(GetCurrentAsyncMethod());
+			Mock<IServiceProvider> serviceProvider = GetServiceProvider();
+			var validateService = new Mock<IValidateService>();
+			Mock<IIdentityService> identityService = new Mock<IIdentityService>();
+
+			SalesDocService service = new SalesDocService(serviceProvider.Object, _dbContext("test"));
+
+			serviceProvider.Setup(s => s.GetService(typeof(SalesDocService))).Returns(service);
+			serviceProvider.Setup(s => s.GetService(typeof(PosDbContext))).Returns(dbContext);
+			SalesDoc data = GetTestData(dbContext);
+			List<SalesDoc> salesDocs = new List<SalesDoc>();
+			salesDocs.Add(data);
+
+			var serviceMock = new Mock<ISalesDocService>();
+			 
+			serviceMock
+				.Setup(s => s.ReadModelVoid(It.IsAny<string>(), 1, 25, "", "", "", It.IsAny<string>()))
+					.Returns(new Tuple<List<SalesDoc>, int, Dictionary<string, string>, List<string>>(salesDocs, It.IsAny<int>(),It.IsAny<Dictionary<string,string>>(),It.IsAny<List<string>>()));
+
+			SalesDocViewModel dataVM = new SalesDocViewModel();
+			//Act
+			IActionResult response = GetController(identityService.Object, validateService.Object, serviceMock.Object).GetVoid("", 1, 25, "", "", "");
+
+			//Assert
+			int statusCode = this.GetStatusCode(response);
+			Assert.Equal((int)HttpStatusCode.OK, statusCode);
+		}
+		//[Fact]
+		//public void POST_BadRequest()
+		//{
+		//    //Setup
+		//    PosDbContext dbContext = _dbContext(GetCurrentAsyncMethod());
+		//    Mock<IServiceProvider> serviceProvider = GetServiceProvider();
+		//    var validateService = new Mock<IValidateService>();
+		//    validateService
+		//        .Setup(v => v.Validate(It.IsAny<SalesDocViewModel>()))
+		//        .Throws(get());
+		//    Mock<IIdentityService> identityService = new Mock<IIdentityService>();
+
+		//    SalesDocService service = new SalesDocService(serviceProvider.Object, _dbContext("test"));
+
+		//    serviceProvider.Setup(s => s.GetService(typeof(SalesDocService))).Returns(service);
+		//    serviceProvider.Setup(s => s.GetService(typeof(PosDbContext))).Returns(dbContext);
+		//    SalesDoc testData = GetTestData(dbContext);
+
+		//    var validateServiceMock = new Mock<IValidateService>();
+		//    validateServiceMock.Setup(v => v.Validate(It.IsAny<SalesDoc>())).Verifiable();
+		//    SalesDocViewModel dataVM = new SalesDocViewModel();
+
+		//    serviceProvider.Setup(sp => sp.GetService(typeof(IValidateService))).Returns(validateServiceMock.Object);
+		//    //Act
+		//    IActionResult response = GetController(identityService.Object, validateService.Object, service).Post(dataVM).Result;
+
+		//    //Assert
+		//    int statusCode = this.GetStatusCode(response);
+		//    Assert.Equal((int)HttpStatusCode.BadRequest, statusCode);
+		//}
 
 
-    }
+	}
+ 
 }

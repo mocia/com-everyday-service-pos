@@ -396,5 +396,35 @@ namespace Com.Everyday.Service.Pos.Test.Service.SalesDocServiceTests
 			var Response = service.GenerateExcelOmzet("code", DateTimeOffset.Now.AddDays(-1), DateTimeOffset.Now, "0");
 			Assert.NotNull(Response);
 		}
+ 
+		[Fact]
+		public async void Should_Success_Void()
+		{
+			var service = new SalesDocService(GetServiceProvider().Object, _dbContext(GetCurrentMethod()));
+			var data = _dataUtil(service).GetNewData();
+			var create = await service.Create(data);
+			var Response = service.Void(1,"user",7);
+			Assert.NotNull(Response);
+		}
+		[Fact]
+		public async void Should_Success_ReadModelByCode()
+		{
+			var service = new SalesDocService(GetServiceProvider().Object, _dbContext(GetCurrentMethod()));
+			var data = _dataUtil(service).GetNewData();
+			var create = await service.Create(data);
+			var Response =   service.ReadModelByCode(create.Code,create.StoreCode);
+			Assert.NotNull(Response);
+		}
+
+		[Fact]
+		public async void Should_Success_ReadModelVoid()
+		{
+			var service = new SalesDocService(GetServiceProvider().Object, _dbContext(GetCurrentMethod()));
+			var data = _dataUtil(service).GetNewData();
+			var create = await service.Create(data);
+			var Response = service.ReadModelVoid(create.Code,1,25,"{}","","{}");
+			Assert.NotNull(Response);
+		}
+ 
 	}
 }

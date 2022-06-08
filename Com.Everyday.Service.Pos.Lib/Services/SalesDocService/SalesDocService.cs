@@ -137,7 +137,7 @@ namespace Com.Everyday.Service.Pos.Lib.Services.SalesDocService
         }
         public List<SalesDoc> OmzetReport(string storecode, DateTimeOffset dateFrom, DateTimeOffset dateTo, string shift)
         {
-            var a = DbSet.Where(m => m.StoreCode == storecode && m.Date.Date >= dateFrom.Date && m.Date.Date <= dateFrom.Date && m.Shift == (string.IsNullOrWhiteSpace(shift) ? m.Shift : Convert.ToInt32(shift)))
+            var a = DbSet.Where(m =>m.isVoid== false && m.StoreCode == storecode && m.Date.Date >= dateFrom.Date && m.Date.Date <= dateFrom.Date && m.Shift == (string.IsNullOrWhiteSpace(shift) ? m.Shift : Convert.ToInt32(shift)))
                     .Include(m => m.Details);
 
             return a.ToList();
@@ -714,6 +714,7 @@ namespace Com.Everyday.Service.Pos.Lib.Services.SalesDocService
             var Query = (from c in DbContext.SalesDocs
                          join a in DbContext.SalesDocDetails on c.Id equals a.SalesDocId
                          where
+						 c.isVoid == false &&
                          c._IsDeleted == false
                          && a._IsDeleted == false
                          //&& c.StorageId == (string.IsNullOrWhiteSpace(storageId) ? c.StorageId : storageId)

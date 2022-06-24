@@ -598,6 +598,7 @@ namespace Com.Everyday.Service.Pos.Lib.Services.SalesDocService
                          select new PaymentMethodReportViewModel
                          {
                              Code = c.Code == "" ? "-" : c.Code,
+							 BankCard = c.BankCardName,
                              Date = c.Date,
                              BankName = c.BankName == "" ? "-" : c.BankName,
                              Card = c.Card == "" ? "-" : c.Card,

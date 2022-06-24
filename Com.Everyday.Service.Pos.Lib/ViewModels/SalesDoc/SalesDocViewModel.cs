@@ -81,7 +81,7 @@ namespace Com.Everyday.Service.Pos.Lib.ViewModels.SalesDoc
 
                 if (string.IsNullOrWhiteSpace(salesDetail.cardName))
                 {
-                    yield return new ValidationResult("bankCard is cardName", new List<string> { "cardName" });
+                    yield return new ValidationResult("cardName is required", new List<string> { "cardName" });
                 }
             }
 

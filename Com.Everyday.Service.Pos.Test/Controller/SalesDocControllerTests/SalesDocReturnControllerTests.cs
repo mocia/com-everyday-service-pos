@@ -109,7 +109,6 @@ namespace Com.Everyday.Service.Pos.Test.Controller.SalesDocControllerTests
         //    return new ServiceValidationException(validationContext, validationResults);
         //}
 
-
         Mock<IServiceProvider> GetServiceProvider()
         {
             Mock<IServiceProvider> serviceProvider = new Mock<IServiceProvider>();
@@ -156,7 +155,6 @@ namespace Com.Everyday.Service.Pos.Test.Controller.SalesDocControllerTests
             //Assert
             Assert.Equal((int)HttpStatusCode.OK, GetStatusCode(response));
         }
-
 
         [Fact]
         public void Get_ReturnError()
@@ -449,14 +447,30 @@ namespace Com.Everyday.Service.Pos.Test.Controller.SalesDocControllerTests
         [Fact]
         public void Should_Error_Get_Data_By_Id()
         {
+            var user = new Mock<ClaimsPrincipal>();
+            var claims = new Claim[]
+            {
+                new Claim("username", "SalesDoctestusername")
+            };
+            user.Setup(u => u.Claims).Returns(claims);
+
             Mock<IIdentityService> identityService = new Mock<IIdentityService>();
 
             var validateMock = new Mock<IValidateService>();
             var mockFacade = new Mock<ISalesDocReturnService>();
-            SalesDocReturnController controller = GetController(identityService, validateMock, mockFacade);
+
+            //SalesDocReturnController controller = GetController(identityService, validateMock, mockFacade);
+            
+            SalesDocReturnController controller = new SalesDocReturnController(identityService.Object, validateMock.Object, mockFacade.Object);
+            controller.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext()
+                {
+                    User = user.Object
+                }
+            };
             var response = controller.GetById(It.IsAny<int>());
-            //Assert.Equal(200, (int)HttpStatusCode.OK);
-             Assert.Equal((int)HttpStatusCode.NotFound, GetStatusCode(response));
+            Assert.Equal((int)HttpStatusCode.InternalServerError, GetStatusCode(response));
         }
 
         [Fact]

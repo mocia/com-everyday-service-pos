@@ -425,6 +425,26 @@ namespace Com.Everyday.Service.Pos.Test.Service.SalesDocServiceTests
 			var Response = service.ReadModelVoid(create.Code,1,25,"{}","","{}");
 			Assert.NotNull(Response);
 		}
- 
+
+		[Fact]
+		public async void Should_Success_PaymentReport()
+		{
+			var service = new SalesDocService(GetServiceProvider().Object, _dbContext(GetCurrentMethod()));
+			var data = _dataUtil(service).GetNewData();
+			var create = await service.Create(data);
+			var Response = service.GetPaymentMethodReport("code", DateTimeOffset.Now.AddDays(-1), DateTimeOffset.Now, "0", "", 7, "", 1, 1, "{}");
+			Assert.NotNull(Response);
+		}
+
+		[Fact]
+		public async void Should_Success_VoidReport()
+		{
+			var service = new SalesDocService(GetServiceProvider().Object, _dbContext(GetCurrentMethod()));
+			var data = _dataUtil(service).GetNewData();
+			var create = await service.Create(data);
+			var Response = service.GetSalesVoidReport("code", DateTimeOffset.Now.AddDays(-1), DateTimeOffset.Now, "0", 7, 1, 1, "{}");
+			Assert.NotNull(Response);
+		}
+
 	}
 }

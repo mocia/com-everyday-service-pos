@@ -49,9 +49,9 @@ namespace Com.Everyday.Service.Pos.Lib.ViewModels.SalesDoc
             {
                 yield return new ValidationResult("salesDetail is required", new List<string> { "salesDetail" });
             }
-            if (salesDetail.paymentType == null)
+            if (string.IsNullOrWhiteSpace(salesDetail.paymentType))
             {
-                yield return new ValidationResult("paymentType is required", new List<string> { "salesDetail.paymentType" });
+                yield return new ValidationResult("paymentType is required", new List<string> { "paymentType" });
             }
             if (salesDetail.paymentType == "Card" || salesDetail.paymentType == "Partial")
             {
@@ -61,19 +61,19 @@ namespace Com.Everyday.Service.Pos.Lib.ViewModels.SalesDoc
                 }
                 if(salesDetail.bank == null)
                 {
-                    yield return new ValidationResult("bank is required", new List<string> { "salesDetail.bank" });
+                    yield return new ValidationResult("bank is required", new List<string> { "bank" });
                 }
                 if (salesDetail.bankCard == null)
                 {
-                    yield return new ValidationResult("bankCard is required", new List<string> { "salesDetail.bankCard" });
+                    yield return new ValidationResult("bankCard is required", new List<string> { "bankCard" });
                 }
                 if (string.IsNullOrWhiteSpace(salesDetail.cardNumber))
                 {
-                    yield return new ValidationResult("cardNumber is required", new List<string> { "salesDetail.cardNumber" });
+                    yield return new ValidationResult("cardNumber is required", new List<string> { "cardNumber" });
                 }
                 if (string.IsNullOrWhiteSpace(salesDetail.cardName))
                 {
-                    yield return new ValidationResult("bankCard is cardName", new List<string> { "salesDetail.cardName" });
+                    yield return new ValidationResult("bankCard is required", new List<string> { "cardName" });
                 }
             }
             if (date == null)

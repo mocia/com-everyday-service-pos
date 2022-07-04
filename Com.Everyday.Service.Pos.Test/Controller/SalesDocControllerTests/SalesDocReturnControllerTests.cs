@@ -1,4 +1,5 @@
-﻿using Com.Danliris.Service.Inventory.Lib;
+﻿using AutoMapper;
+using Com.Danliris.Service.Inventory.Lib;
 using Com.Danliris.Service.Inventory.Lib.Services;
 using Com.Danliris.Service.Inventory.Test.Helpers;
 using Com.Everyday.Service.Pos.Lib.Models.SalesDoc;
@@ -6,6 +7,7 @@ using Com.Everyday.Service.Pos.Lib.Models.SalesReturn;
 using Com.Everyday.Service.Pos.Lib.Services.SalesDocReturnService;
 using Com.Everyday.Service.Pos.Lib.Services.SalesDocService;
 using Com.Everyday.Service.Pos.Lib.ViewModels.SalesDoc;
+using Com.Everyday.Service.Pos.Lib.ViewModels.SalesDocReturn;
 using Com.Everyday.Service.Pos.WebApi.Controllers.v1.SalesDocControllers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -107,7 +109,6 @@ namespace Com.Everyday.Service.Pos.Test.Controller.SalesDocControllerTests
         //    return new ServiceValidationException(validationContext, validationResults);
         //}
 
-
         Mock<IServiceProvider> GetServiceProvider()
         {
             Mock<IServiceProvider> serviceProvider = new Mock<IServiceProvider>();
@@ -154,7 +155,6 @@ namespace Com.Everyday.Service.Pos.Test.Controller.SalesDocControllerTests
             //Assert
             Assert.Equal((int)HttpStatusCode.OK, GetStatusCode(response));
         }
-
 
         [Fact]
         public void Get_ReturnError()
@@ -212,172 +212,282 @@ namespace Com.Everyday.Service.Pos.Test.Controller.SalesDocControllerTests
         }
 
         [Fact]
+        public void POST_Return_OK()
+        {
+            //Setup
+            PosDbContext dbContext = _dbContext(GetCurrentAsyncMethod());
+            Mock<IServiceProvider> serviceProvider = GetServiceProvider();
+            var validateService = new Mock<IValidateService>();
+            Mock<IIdentityService> identityService = new Mock<IIdentityService>();
+            var validateMock = new Mock<IValidateService>();
+            var mockFacade = new Mock<ISalesDocReturnService>();
+
+            SalesDocReturnService service = new SalesDocReturnService(serviceProvider.Object, _dbContext("test"));
+
+            serviceProvider.Setup(s => s.GetService(typeof(SalesDocReturnService))).Returns(service);
+            serviceProvider.Setup(s => s.GetService(typeof(PosDbContext))).Returns(dbContext);
+
+            SalesDocReturnViewModel dataVM = new SalesDocReturnViewModel()
+            {
+                sales = new SalesDocViewModel()
+                {
+                    code = "code",
+                    Id = 1
+                },
+                salesDetail = new SalesDetail()
+                {
+                    bank = new Bank
+                    {
+                        _id = 1,
+                        name = "name",
+
+                    },
+                    bankCard = new Bank
+                    {
+                        _id = 1,
+                        name = "name"
+                    },
+                    cardType = new Card
+                    {
+                        _id = 1,
+                        name = "name"
+                    },
+                    voucher = new Voucher
+                    {
+                        value = 1
+                    }
+                },
+                store = new Store()
+                {
+                    Id = 1,
+                    Name = "name",
+                    Storage = new StorageViewModel()
+                    {
+                        name = "name",
+                        _id = 1
+                    }
+
+                },
+                items = new List<SalesDocReturnDetailViewModel>()
+                {
+                    new SalesDocReturnDetailViewModel()
+                    {
+                        quantity=1,
+                        item= new SalesDocDetailViewModel()
+                        {
+                            itemCode="code",
+                            item= new Lib.ViewModels.NewIntegrationViewModel.ItemViewModel()
+                            {
+                                code="code",
+                                ArticleRealizationOrder="a"
+                            },
+                        },
+                        returnItems= new List<SalesDocDetailViewModel>()
+                        {
+                            new SalesDocDetailViewModel()
+                            {
+                                itemCode="c",
+                                item= new Lib.ViewModels.NewIntegrationViewModel.ItemViewModel()
+                                {
+                                    code="c",
+                                    ArticleRealizationOrder="a"
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            var serviceMock = new Mock<ISalesDocService>();
+            serviceMock
+                .Setup(s => s.Create(It.IsAny<SalesDoc>()))
+                .ReturnsAsync(It.IsAny<SalesDoc>());
+
+            var mockMapper = new Mock<IMapper>();
+            mockMapper.Setup(x => x.Map<SalesDocReturn>(It.IsAny<SalesDocReturnViewModel>()))
+                .Returns(new SalesDocReturn());
+
+            SalesDocReturnController controller = GetController(identityService, validateMock, mockFacade);
+            //Act
+            IActionResult response = controller.Post(dataVM).Result;
+
+
+            //Assert
+            int statusCode = this.GetStatusCode(response);
+            Assert.NotEqual((int)HttpStatusCode.NotFound, statusCode);
+        }
+
+        [Fact]
+        public void POST_Return_BadRequest()
+        {
+            //Setup
+            PosDbContext dbContext = _dbContext(GetCurrentAsyncMethod());
+            Mock<IServiceProvider> serviceProvider = GetServiceProvider();
+            var validateService = new Mock<IValidateService>();
+            Mock<IIdentityService> identityService = new Mock<IIdentityService>();
+            var validateMock = new Mock<IValidateService>();
+            var mockFacade = new Mock<ISalesDocReturnService>();
+
+            SalesDocReturnService service = new SalesDocReturnService(serviceProvider.Object, _dbContext("test"));
+
+            serviceProvider.Setup(s => s.GetService(typeof(SalesDocReturnService))).Returns(service);
+            serviceProvider.Setup(s => s.GetService(typeof(PosDbContext))).Returns(dbContext);
+
+            SalesDocReturnViewModel dataVM = new SalesDocReturnViewModel()
+            {
+                sales = new SalesDocViewModel()
+                {
+                    code = "code",
+                    Id = 1
+                },
+                salesDetail = new SalesDetail()
+                {
+                    bank = new Bank
+                    {
+                        _id = 1,
+                        name = "name",
+
+                    },
+                    bankCard = new Bank
+                    {
+                        _id = 1,
+                        name = "name"
+                    },
+                    cardType = new Card
+                    {
+                        _id = 1,
+                        name = "name"
+                    },
+                    voucher = new Voucher
+                    {
+                        value = 1
+                    }
+                },
+                store = new Store()
+                {
+                    Id = 1,
+                    Name = "name",
+                    Storage = new StorageViewModel()
+                    {
+                        name = "name",
+                        _id = 1
+                    }
+
+                },
+                items = new List<SalesDocReturnDetailViewModel>()
+                {
+                    new SalesDocReturnDetailViewModel()
+                    {
+                        quantity=1,
+                        item= new SalesDocDetailViewModel()
+                        {
+                            itemCode="code",
+                            item= new Lib.ViewModels.NewIntegrationViewModel.ItemViewModel()
+                            {
+                                code="code",
+                                ArticleRealizationOrder="a"
+                            },
+                        },
+                        returnItems= new List<SalesDocDetailViewModel>()
+                        {
+                        }
+                    }
+                }
+            };
+
+            var serviceMock = new Mock<ISalesDocService>();
+            serviceMock
+                .Setup(s => s.Create(It.IsAny<SalesDoc>()))
+                .ReturnsAsync(It.IsAny<SalesDoc>());
+
+            var mockMapper = new Mock<IMapper>();
+            mockMapper.Setup(x => x.Map<SalesDocReturn>(It.IsAny<SalesDocReturnViewModel>()))
+                .Returns(new SalesDocReturn());
+
+            SalesDocReturnController controller = GetController(identityService, validateMock, mockFacade);
+            //Act
+            IActionResult response = controller.Post(dataVM).Result;
+
+
+            //Assert
+            int statusCode = this.GetStatusCode(response);
+            Assert.NotEqual((int)HttpStatusCode.BadRequest, statusCode);
+        }
+
+        [Fact]
+        public void POST_InternalServerError()
+        {
+            //Setup
+            PosDbContext dbContext = _dbContext(GetCurrentAsyncMethod());
+            Mock<IServiceProvider> serviceProvider = GetServiceProvider();
+            var validateService = new Mock<IValidateService>();
+            Mock<IIdentityService> identityService = new Mock<IIdentityService>();
+            var validateMock = new Mock<IValidateService>();
+            var mockFacade = new Mock<ISalesDocReturnService>();
+
+            SalesDocReturnService service = new SalesDocReturnService(serviceProvider.Object, _dbContext("test"));
+
+            serviceProvider.Setup(s => s.GetService(typeof(SalesDocReturnService))).Returns(service);
+            serviceProvider.Setup(s => s.GetService(typeof(PosDbContext))).Returns(dbContext);
+
+            //var serviceMock = new Mock<ISalesDocService>();
+            mockFacade
+                .Setup(s => s.Create(It.IsAny<SalesDocReturn>(), It.IsAny<SalesDocReturnViewModel>()))
+                .Throws(new Exception());
+
+            SalesDocReturnViewModel dataVM = new SalesDocReturnViewModel();
+            //Act
+            IActionResult response = GetController(identityService, validateMock, mockFacade).Post(dataVM).Result;
+
+            //Assert
+            int statusCode = this.GetStatusCode(response);
+            Assert.Equal((int)HttpStatusCode.InternalServerError, statusCode);
+        }
+
+        [Fact]
         public void Should_Error_Get_Data_By_Id()
+        {
+            var user = new Mock<ClaimsPrincipal>();
+            var claims = new Claim[]
+            {
+                new Claim("username", "SalesDoctestusername")
+            };
+            user.Setup(u => u.Claims).Returns(claims);
+
+            Mock<IIdentityService> identityService = new Mock<IIdentityService>();
+
+            var validateMock = new Mock<IValidateService>();
+            var mockFacade = new Mock<ISalesDocReturnService>();
+
+            //SalesDocReturnController controller = GetController(identityService, validateMock, mockFacade);
+            
+            SalesDocReturnController controller = new SalesDocReturnController(identityService.Object, validateMock.Object, mockFacade.Object);
+            controller.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext()
+                {
+                    User = user.Object
+                }
+            };
+            var response = controller.GetById(It.IsAny<int>());
+            Assert.Equal((int)HttpStatusCode.InternalServerError, GetStatusCode(response));
+        }
+
+        [Fact]
+        public void Should_InternalServerError_Get_Data_By_Id()
         {
             Mock<IIdentityService> identityService = new Mock<IIdentityService>();
 
             var validateMock = new Mock<IValidateService>();
-            //validateMock.Setup(s => s.Validate(It.IsAny<ISalesDocReturnService>())).Verifiable();
-
             var mockFacade = new Mock<ISalesDocReturnService>();
-
-            //mockfacade.setup(x => x.readmodelbyid(it.isany<int>()))
-            //    .returns(new salesdocreturn() { });
-
-            //var mockMapper = new Mock<IMapper>();
-            //mockMapper.Setup(x => x.Map<SalesDocReturn>(It.IsAny<SalesDocReturn>()))
-            //    .Returns(SalesDocViewModel);
-
+            mockFacade
+                .Setup(s => s.ReadModelById(It.IsAny<int>()))
+                .Throws(new Exception());
             SalesDocReturnController controller = GetController(identityService, validateMock, mockFacade);
-            var response = controller.GetById(It.IsAny<int>());
+
+            var response = controller.GetById(0);
             //Assert.Equal(200, (int)HttpStatusCode.OK);
-             Assert.Equal((int)HttpStatusCode.InternalServerError, GetStatusCode(response));
+            Assert.Equal((int)HttpStatusCode.InternalServerError, GetStatusCode(response));
         }
-
-        //private int GetStatusCode(object response)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //private SalesDocReturnController GetController(Mock<ISalesDocReturnService> mockFacade, Mock<IValidateService> validateMock)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-
-        //[Fact]
-        //public void Get_InternalServerError()
-        //{
-        //    Mock<IServiceProvider> serviceProvider = GetServiceProvider();
-        //    var validateService = new Mock<IValidateService>();
-        //    Mock<IIdentityService> identityService = new Mock<IIdentityService>();
-
-        //    serviceProvider.Setup(s => s.GetService(typeof(SalesDocService))).Returns(new Exception());
-        //    SalesDocService service = new SalesDocService(serviceProvider.Object, _dbContext("test"));
-        //    var serviceMock = new Mock<ISalesDocService>();
-        //    serviceMock
-        //        .Setup(s => s.ReadModel(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), "{}", It.IsAny<string>(), "{}", ""))
-        //        .Throws(new Exception());
-        //    //Act
-        //    IActionResult response = GetController(identityService.Object, validateService.Object, serviceMock.Object).Get("", 1, 1, "{}", "", "{}");
-
-        //    //Assert
-        //    int statusCode = this.GetStatusCode(response);
-        //    Assert.Equal((int)HttpStatusCode.InternalServerError, statusCode);
-        //}
-
-        //[Fact]
-        //public void GetById_Return_OK()
-        //{
-        //    //Setup
-        //    PosDbContext dbContext = _dbContext(GetCurrentAsyncMethod());
-        //    Mock<IServiceProvider> serviceProvider = GetServiceProvider();
-        //    var validateService = new Mock<IValidateService>();
-        //    Mock<IIdentityService> identityService = new Mock<IIdentityService>();
-
-        //    SalesDocService service = new SalesDocService(serviceProvider.Object, _dbContext("test"));
-
-        //    serviceProvider.Setup(s => s.GetService(typeof(SalesDocService))).Returns(service);
-        //    serviceProvider.Setup(s => s.GetService(typeof(PosDbContext))).Returns(dbContext);
-        //    SalesDoc testData = GetTestData(dbContext);
-
-        //    var serviceMock = new Mock<ISalesDocService>();
-        //    serviceMock
-        //        .Setup(s => s.ReadModelById(It.IsAny<int>()))
-        //        .Returns(testData);
-        //    //Act
-        //    IActionResult response = GetController(identityService.Object, validateService.Object, serviceMock.Object).GetById(testData.Id);
-
-
-        //    //Assert
-        //    int statusCode = this.GetStatusCode(response);
-        //    Assert.NotEqual((int)HttpStatusCode.NotFound, statusCode);
-        //}
-
-        //[Fact]
-        //public void POST_Return_OK()
-        //{
-        //    //Setup
-        //    PosDbContext dbContext = _dbContext(GetCurrentAsyncMethod());
-        //    Mock<IServiceProvider> serviceProvider = GetServiceProvider();
-        //    var validateService = new Mock<IValidateService>();
-        //    Mock<IIdentityService> identityService = new Mock<IIdentityService>();
-
-        //    SalesDocService service = new SalesDocService(serviceProvider.Object, _dbContext("test"));
-
-        //    serviceProvider.Setup(s => s.GetService(typeof(SalesDocService))).Returns(service);
-        //    serviceProvider.Setup(s => s.GetService(typeof(PosDbContext))).Returns(dbContext);
-
-        //    SalesDocViewModel dataVM = new SalesDocViewModel();
-
-        //    //Act
-        //    IActionResult response = GetController(identityService.Object, validateService.Object, service).Post(dataVM).Result;
-
-
-        //    //Assert
-        //    int statusCode = this.GetStatusCode(response);
-        //    Assert.NotEqual((int)HttpStatusCode.NotFound, statusCode);
-        //}
-
-        //[Fact]
-        //public void POST_InternalServerError()
-        //{
-        //    //Setup
-        //    PosDbContext dbContext = _dbContext(GetCurrentAsyncMethod());
-        //    Mock<IServiceProvider> serviceProvider = GetServiceProvider();
-        //    var validateService = new Mock<IValidateService>();
-        //    Mock<IIdentityService> identityService = new Mock<IIdentityService>();
-
-        //    SalesDocService service = new SalesDocService(serviceProvider.Object, _dbContext("test"));
-
-        //    serviceProvider.Setup(s => s.GetService(typeof(SalesDocService))).Returns(service);
-        //    serviceProvider.Setup(s => s.GetService(typeof(PosDbContext))).Returns(dbContext);
-
-        //    var serviceMock = new Mock<ISalesDocService>();
-        //    serviceMock
-        //        .Setup(s => s.Create(It.IsAny<SalesDoc>()))
-        //        .Throws(new Exception());
-
-        //    SalesDocViewModel dataVM = new SalesDocViewModel();
-        //    //Act
-        //    IActionResult response = GetController(identityService.Object, validateService.Object, serviceMock.Object).Post(dataVM).Result;
-
-        //    //Assert
-        //    int statusCode = this.GetStatusCode(response);
-        //    Assert.Equal((int)HttpStatusCode.InternalServerError, statusCode);
-        //}
-
-        //[Fact]
-        //public void POST_BadRequest()
-        //{
-        //    //Setup
-        //    PosDbContext dbContext = _dbContext(GetCurrentAsyncMethod());
-        //    Mock<IServiceProvider> serviceProvider = GetServiceProvider();
-        //    var validateService = new Mock<IValidateService>();
-        //    validateService
-        //        .Setup(v => v.Validate(It.IsAny<SalesDocViewModel>()))
-        //        .Throws(get());
-        //    Mock<IIdentityService> identityService = new Mock<IIdentityService>();
-
-        //    SalesDocService service = new SalesDocService(serviceProvider.Object, _dbContext("test"));
-
-        //    serviceProvider.Setup(s => s.GetService(typeof(SalesDocService))).Returns(service);
-        //    serviceProvider.Setup(s => s.GetService(typeof(PosDbContext))).Returns(dbContext);
-        //    SalesDoc testData = GetTestData(dbContext);
-
-        //    var validateServiceMock = new Mock<IValidateService>();
-        //    validateServiceMock.Setup(v => v.Validate(It.IsAny<SalesDoc>())).Verifiable();
-        //    SalesDocViewModel dataVM = new SalesDocViewModel();
-
-        //    serviceProvider.Setup(sp => sp.GetService(typeof(IValidateService))).Returns(validateServiceMock.Object);
-        //    //Act
-        //    IActionResult response = GetController(identityService.Object, validateService.Object, service).Post(dataVM).Result;
-
-        //    //Assert
-        //    int statusCode = this.GetStatusCode(response);
-        //    Assert.Equal((int)HttpStatusCode.BadRequest, statusCode);
-        //}
-
-
     }
 }

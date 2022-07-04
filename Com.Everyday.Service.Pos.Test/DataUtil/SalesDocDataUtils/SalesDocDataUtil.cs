@@ -47,7 +47,7 @@ namespace Com.Everyday.Service.Pos.Test.DataUtil.SalesDocDataUtils
                         isReturn=false,
                         ItemName="name",
                         ItemDomesticCOGS=1,
-
+                        ItemArticleRealizationOrder="a"
                     },
 
                 }

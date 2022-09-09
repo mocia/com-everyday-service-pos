@@ -42,7 +42,8 @@ namespace Com.Everyday.Service.Pos.Lib.Services.SalesDocService
         }
         public Tuple<List<SalesDoc>, int, Dictionary<string, string>, List<string>> ReadModel(string storecode,int Page = 1, int Size = 25, string Order = "{}", string Keyword = null, string Filter = "{}", string Username = "")
         {
-            IQueryable<SalesDoc> Query = this.DbContext.SalesDocs.Where(x => x._CreatedBy == Username && x.StoreCode == storecode);
+            //IQueryable<SalesDoc> Query = this.DbContext.SalesDocs.Where(x => x._CreatedBy == Username && x.StoreCode == storecode);
+            IQueryable<SalesDoc> Query = this.DbContext.SalesDocs.Where(x => x.StoreCode == storecode);
 
             List<string> SearchAttributes = new List<string>()
             {

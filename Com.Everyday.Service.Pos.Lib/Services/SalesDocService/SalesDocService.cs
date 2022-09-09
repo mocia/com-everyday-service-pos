@@ -753,7 +753,8 @@ namespace Com.Everyday.Service.Pos.Lib.Services.SalesDocService
                              SubTotal = c.SubTotal,
                              StoreName = c.StoreName,
                              Shift = c.Shift,
-                             Voucher = c.VoucherValue
+                             Voucher = c.VoucherValue,
+                             c.GrandTotal
                          });
 
             var Query2 = (from data in Query
@@ -770,13 +771,13 @@ namespace Com.Everyday.Service.Pos.Lib.Services.SalesDocService
                               CardTypeName = groupData.FirstOrDefault().CardTypeName,
                               BankName = groupData.FirstOrDefault().BankName,
                               BankCardName = groupData.FirstOrDefault().BankCardName,
-                              CashAmount = groupData.Sum(x => x.CashAmount),
-                              CardAmount = groupData.Sum(x => x.CardAmount),
+                              CashAmount = groupData.FirstOrDefault().CashAmount,
+                              CardAmount = groupData.FirstOrDefault().CardAmount,
                               Voucher = groupData.FirstOrDefault().Voucher,
-                              TotalOmzetBruto = groupData.Sum(x => x.SubTotal),
-                              Discount = groupData.Sum(x => x.Discount),
+                              TotalOmzetBruto = groupData.FirstOrDefault().SubTotal,
+                              Discount = groupData.FirstOrDefault().Discount,
                               Margin = groupData.Sum(x => x.Margin),
-                              TotalOmzetNetto = groupData.Sum(x => x.SubTotal)
+                              TotalOmzetNetto = groupData.FirstOrDefault().GrandTotal
                           }
 
               );
@@ -850,13 +851,13 @@ namespace Com.Everyday.Service.Pos.Lib.Services.SalesDocService
                     result.Rows.Add(index, item.StoreName, item.Shift, date, item.Code, item.PaymentType, item.Card, item.CardTypeName, item.BankName, item.BankCardName, item.CashAmount, item.CardAmount, item.Voucher,
                         item.TotalOmzetBruto, item.Discount, item.Margin, item.TotalOmzetNetto);
 
-                    totCashAmount = +item.CashAmount;
-                    totCardAmount = +item.CardAmount;
-                    totVoucher = +item.Voucher;
-                    totTotalOmzetBruto = +item.TotalOmzetBruto;
-                    totDiscount = +item.Discount;
-                    totMargin = +item.Margin;
-                    totTotalOmzetNetto = +item.TotalOmzetNetto;
+                    totCashAmount += item.CashAmount;
+                    totCardAmount += item.CardAmount;
+                    totVoucher += item.Voucher;
+                    totTotalOmzetBruto += item.TotalOmzetBruto;
+                    totDiscount += item.Discount;
+                    totMargin += item.Margin;
+                    totTotalOmzetNetto += item.TotalOmzetNetto;
 
                 }
 

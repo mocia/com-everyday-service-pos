@@ -43,7 +43,8 @@ namespace Com.Everyday.Service.Pos.Lib.Services.SalesDocReturnService
         }
         public Tuple<List<SalesDocReturn>, int, Dictionary<string, string>, List<string>> ReadModel(string storecode, int Page = 1, int Size = 25, string Order = "{}", string Keyword = null, string Filter = "{}", string Username = "")
         {
-            IQueryable<SalesDocReturn> Query = this.DbContext.SalesDocReturns.Where(x => x._CreatedBy == Username && x.StoreCode == storecode);
+            //IQueryable<SalesDocReturn> Query = this.DbContext.SalesDocReturns.Where(x => x._CreatedBy == Username && x.StoreCode == storecode);
+            IQueryable<SalesDocReturn> Query = this.DbContext.SalesDocReturns.Where(x => x.StoreCode == storecode);
 
             List<string> SearchAttributes = new List<string>()
             {

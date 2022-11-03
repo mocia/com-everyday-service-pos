@@ -74,7 +74,7 @@ namespace Com.Everyday.Service.Pos.Lib.Services.SalesDocService
         public Tuple<List<SalesDoc>, int, Dictionary<string, string>, List<string>> ReadModelVoid(string storecode, int Page = 1, int Size = 25, string Order = "{}", string Keyword = null, string Filter = "{}", string Username = "")
         {
             //IQueryable<SalesDoc> Query = this.DbContext.SalesDocs.Where(x => x._CreatedBy == Username && x.isVoid == false && x.StoreCode == storecode);
-            IQueryable<SalesDoc> Query = DbSet.Where(x => x._CreatedBy == Username && x.isVoid == false && x.StoreCode == storecode)
+            IQueryable<SalesDoc> Query = DbSet.Where(x => /*x._CreatedBy == Username &&*/ x.isVoid == false && x.StoreCode == storecode)
                 .Include(x => x.Details);
             List<string> SearchAttributes = new List<string>()
             {
@@ -103,7 +103,7 @@ namespace Com.Everyday.Service.Pos.Lib.Services.SalesDocService
         public Tuple<List<SalesDoc>, int, Dictionary<string, string>, List<string>> ReadModelReturn(string storecode, int Page = 1, int Size = 25, string Order = "{}", string Keyword = null, string Filter = "{}", string Username = "")
         {
             //IQueryable<SalesDoc> Query = this.DbContext.SalesDocs.Where(x => x._CreatedBy == Username && x.isVoid == false && x.StoreCode == storecode);
-            IQueryable<SalesDoc> Query = DbSet.Where(x => x._CreatedBy == Username && x.isReturn == false && x.StoreCode == storecode)
+            IQueryable<SalesDoc> Query = DbSet.Where(x =>/* x._CreatedBy == Username &&*/ x.isReturn == false && x.StoreCode == storecode)
                 .Include(x => x.Details);
             List<string> SearchAttributes = new List<string>()
             {
